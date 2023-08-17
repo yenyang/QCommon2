@@ -24,4 +24,7 @@ Global
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B58B8D82-DA3D-47D6-8054-B0634C848622}
 	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		QCommon\Shared\QCommonShared.projitems*{cf555b78-7b30-44f4-9a5f-6c280293ec1f}*SharedItemsImports = 13
+	EndGlobalSection
 EndGlobal

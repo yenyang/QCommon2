@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace QCommonShared
+namespace QCommonLib
 {
     internal class QCommon
     {
