@@ -31,6 +31,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Colossal.Collections, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Games\Steam\steamapps\common\Project Beverly Hills\Cities2_Data\Managed\Colossal.Collections.dll</HintPath>
+    </Reference>
     <Reference Include="Colossal.Core">
       <HintPath>C:\Games\Steam\steamapps\common\Project Beverly Hills\Cities2_Data\Managed\Colossal.Core.dll</HintPath>
       <Private>False</Private>
@@ -38,6 +42,10 @@
     <Reference Include="Colossal.Logging">
       <HintPath>C:\Games\Steam\steamapps\common\Project Beverly Hills\Cities2_Data\Managed\Colossal.Logging.dll</HintPath>
       <Private>False</Private>
+    </Reference>
+    <Reference Include="Colossal.UI.Binding, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Games\Steam\steamapps\common\Project Beverly Hills\Cities2_Data\Managed\Colossal.UI.Binding.dll</HintPath>
     </Reference>
     <Reference Include="Game">
       <HintPath>C:\Games\Steam\steamapps\common\Project Beverly Hills\Cities2_Data\Managed\Game.dll</HintPath>
@@ -75,10 +83,15 @@
       <HintPath>C:\Games\Steam\steamapps\common\Project Beverly Hills\Cities2_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="UnityEngine.IMGUIModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Games\Steam\steamapps\common\Project Beverly Hills\Cities2_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Shared\QCommon.cs" />
+    <Compile Include="Shared\QKeyListener.cs" />
     <Compile Include="Shared\QLogger.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
