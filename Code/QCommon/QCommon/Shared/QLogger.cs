@@ -4,9 +4,12 @@ using System.Diagnostics;
 
 namespace QCommonLib
 {
-    internal class QLogger
+    // Log file location %AppData%\..\LocalLow\Colossal Order\Cities Skylines II\
+
+    internal abstract class QLogger
     {
-        public static ILog ILogger = LogManager.GetLogger("CS2Test"); // Log file location %AppData%\..\LocalLow\Colossal Order\Cities Skylines II\
+        internal static string Name { get; set; }
+        public static ILog ILogger = LogManager.GetLogger(Name);
 
         [Conditional("DEBUG")]
         public static void LogDebugInfo(string message)
