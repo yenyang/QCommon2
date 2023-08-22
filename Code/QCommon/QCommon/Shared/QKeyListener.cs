@@ -14,19 +14,28 @@ using UnityEngine;
 
 namespace QCommonLib
 {
-    internal struct QKeyEvent
+    internal class QKeyEvent
     {
         internal KeyCode m_code;
         internal EventModifiers m_modifiers;
-        internal bool clicked;
-        internal float timeLastClicked;
+        internal QKeyListerContexts m_context;
+        internal QKeyListener.Trigger m_trigger;
 
-        internal QKeyEvent(KeyCode code, EventModifiers modifiers)
+        internal QKeyEvent(KeyCode code, EventModifiers modifiers, QKeyListerContexts context, QKeyListener.Trigger trigger)
         {
             m_code = code;
             m_modifiers = modifiers;
-            clicked = false;
-            timeLastClicked = 0;
+            m_context = context;
+            m_trigger = trigger;
+        }
+
+        internal bool Alt { get => (m_modifiers & EventModifiers.Alt) > 0; }
+        internal bool Control { get => (m_modifiers & EventModifiers.Control) > 0; }
+        internal bool Shift { get => (m_modifiers & EventModifiers.Shift) > 0; }
+
+        public override string ToString()
+        {
+            return $"QKeyEvent:{(Alt ? "A" : "")}{(Control ? "C" : "")}{(Shift ? "S" : "")}{(Alt || Control || Shift ? "-" : "")}{m_code} ({m_context})";
         }
     }
 
@@ -39,17 +48,23 @@ namespace QCommonLib
     internal class QKeyListener : MonoBehaviour
     {
         private readonly float clickDelay = 0.3f;
-        private bool clicked;
+        private List<QKeyEvent> keys = new List<QKeyEvent>();
+
+        private QKeyEvent clicked = null;
         private float timeLastClicked;
-        private List<QKeyEvent> keys;
 
+        public delegate void Trigger();
+        public ToolBaseSystem m_tool = null;
 
-        public static readonly KeyCode keyCode = KeyCode.M;
-        public static readonly EventModifiers modifiers = EventModifiers.Control;
-
-        public event Action<EventModifiers, KeyCode> keyHitEvent = delegate
+        internal void RegisterKey(KeyCode code, EventModifiers modifiers, QKeyListerContexts context, Trigger trigger)
         {
-        };
+            RegisterKey(new QKeyEvent(code, modifiers, context, trigger));
+        }
+
+        internal void RegisterKey(QKeyEvent key)
+        {
+            keys.Add(key);
+        }
 
         public void OnGUI()
         {
@@ -59,38 +74,43 @@ namespace QCommonLib
             }
 
             UnityEngine.Event current = UnityEngine.Event.current;
-            if (current == null)
+
+            foreach (QKeyEvent key in keys)
             {
-                QLoggerStatic.Debug($"Event: <null>");
-            }
-            else
-            {
-                QLoggerStatic.Debug($"Event: {current.type} {current.keyCode}");
-            }
-            if (current.type == EventType.KeyDown && current.control && current.keyCode == keyCode && Time.time - timeLastClicked > clickDelay)
-            {
-                clicked = true;
-                timeLastClicked = Time.time;
+                if (m_tool != null)
+                {
+                    if (key.m_context == QKeyListerContexts.DefaultTool && QCommon.ActiveTool != QCommon.DefaultTool)
+                    {
+                        continue;
+                    }
+                    if (key.m_context == QKeyListerContexts.InTool && QCommon.ActiveTool != m_tool)
+                    {
+                        continue;
+                    }
+                }
+
+                if (key.Alt != current.alt || key.Control != current.control || key.Shift != current.shift || key.m_code != current.keyCode)
+                {
+                    continue;
+                }
+
+                if (Time.time - timeLastClicked > clickDelay)
+                {
+                    QLoggerStatic.Debug($"Detected key: {key}");
+                    clicked = key;
+                    timeLastClicked = Time.time;
+                    break;
+                }
             }
         }
 
         public void Update()
         {
-            if (clicked)
+            if (clicked != null)
             {
-                clicked = false;
-                this.keyHitEvent(modifiers, keyCode);
+                clicked.m_trigger();
+                clicked = null;
             }
         }
-
-        public void OnDestroy()
-        {
-            keyHitEvent = null;
-        }
-
-        public QKeyListener()
-        {
-        }
-
     }
 }
