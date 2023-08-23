@@ -96,7 +96,7 @@ namespace QCommonLib
 
                 if (Time.time - timeLastClicked > clickDelay)
                 {
-                    QLoggerStatic.Debug($"Detected key: {key}");
+                    QLoggerStatic.Debug($"Detected {key}");
                     clicked = key;
                     timeLastClicked = Time.time;
                     break;

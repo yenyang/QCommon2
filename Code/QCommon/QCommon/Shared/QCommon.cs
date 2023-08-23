@@ -1,4 +1,6 @@
-﻿using Game.Tools;
+﻿using Colossal.Entities;
+using Game.Prefabs;
+using Game.Tools;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -35,5 +37,34 @@ namespace QCommonLib
             }
         }
         private static DefaultToolSystem _defaultTool = null;
+
+        public static PrefabSystem PrefabSystem
+        {
+            get
+            {
+                if (_prefabSystem == null)
+                {
+                    _prefabSystem = World.DefaultGameObjectInjectionWorld.GetExistingSystemManaged<PrefabSystem>();
+                }
+                return _prefabSystem;
+            }
+        }
+        private static PrefabSystem _prefabSystem = null;
+
+        public static string GetPrefabName(EntityManager Manager, Entity e)
+        {
+            string name = Manager.GetName(e);
+
+            if (Manager.TryGetComponent(e, out PrefabRef prefab))
+            {
+                PrefabBase prefabBase = QCommon.PrefabSystem.GetPrefab<PrefabBase>(prefab);
+                if (prefabBase != null)
+                {
+                    name = prefabBase.prefab ? prefabBase.prefab.name : prefabBase.name;
+                }
+            }
+
+            return name;
+        }
     }
 }
