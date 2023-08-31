@@ -51,17 +51,24 @@ namespace QCommonLib
         }
         private static PrefabSystem _prefabSystem = null;
 
+        public static PrefabBase GetPrefab(EntityManager Manager, Entity e)
+        {
+            if (Manager.TryGetComponent(e, out PrefabRef prefab))
+            {
+                return QCommon.PrefabSystem.GetPrefab<PrefabBase>(prefab);
+            }
+
+            return null;
+        }
+
         public static string GetPrefabName(EntityManager Manager, Entity e)
         {
             string name = Manager.GetName(e);
 
-            if (Manager.TryGetComponent(e, out PrefabRef prefab))
+            PrefabBase prefabBase = QCommon.GetPrefab(Manager, e);
+            if (prefabBase != null)
             {
-                PrefabBase prefabBase = QCommon.PrefabSystem.GetPrefab<PrefabBase>(prefab);
-                if (prefabBase != null)
-                {
-                    name = prefabBase.prefab ? prefabBase.prefab.name : prefabBase.name;
-                }
+                name = prefabBase.prefab ? prefabBase.prefab.name : prefabBase.name;
             }
 
             return name;
