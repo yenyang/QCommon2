@@ -3,6 +3,7 @@ using Game.Prefabs;
 using Game.Tools;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using Unity.Entities;
 
@@ -10,6 +11,23 @@ namespace QCommonLib
 {
     public class QCommon
     {
+        public static long ElapsedMilliseconds(long startTime)
+        {
+            long endTime = Stopwatch.GetTimestamp();
+            long elapsed;
+
+            if (endTime > startTime)
+            {
+                elapsed = endTime - startTime;
+            }
+            else
+            {
+                elapsed = startTime - endTime;
+            }
+
+            return elapsed / (Stopwatch.Frequency / 1000);
+        }
+
         public static ToolBaseSystem ActiveTool { get => QCommon.ToolSystem.activeTool; }
 
         public static ToolSystem ToolSystem

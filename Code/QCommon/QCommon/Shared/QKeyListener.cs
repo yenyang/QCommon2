@@ -1,32 +1,26 @@
-﻿using Colossal.Serialization.Entities;
-using Game;
-using Game.Common;
-using Game.Input;
-using Game.Prefabs;
+﻿
 using Game.Tools;
-using System;
 using System.Collections.Generic;
-using Unity.Burst.Intrinsics;
-using Unity.Collections;
-using Unity.Entities;
-using Unity.Jobs;
 using UnityEngine;
 
 namespace QCommonLib
 {
-    internal class QKeyEvent
+    internal class QKeyEventReaction
     {
+        private readonly float clickDelay = 0.1f;
+        private static float timeLastClicked;
+
         internal KeyCode m_code;
         internal EventModifiers m_modifiers;
         internal QKeyListerContexts m_context;
-        internal QKeyListener.Trigger m_trigger;
+        public ToolBaseSystem m_tool = null;
 
-        internal QKeyEvent(KeyCode code, EventModifiers modifiers, QKeyListerContexts context, QKeyListener.Trigger trigger)
+        internal QKeyEventReaction(KeyCode code, EventModifiers modifiers, QKeyListerContexts context, ToolBaseSystem tool)
         {
             m_code = code;
             m_modifiers = modifiers;
             m_context = context;
-            m_trigger = trigger;
+            m_tool = tool;
         }
 
         internal bool Alt { get => (m_modifiers & EventModifiers.Alt) > 0; }
@@ -37,68 +31,91 @@ namespace QCommonLib
         {
             return $"QKeyEvent:{(Alt ? "A" : "")}{(Control ? "C" : "")}{(Shift ? "S" : "")}{(Alt || Control || Shift ? "-" : "")}{m_code} ({m_context})";
         }
+
+        public bool IsPressed(bool useModifiers = true)
+        {
+            if (Event.current.type != EventType.KeyDown)
+            {
+                return false;
+            }
+
+            Event current = Event.current;
+
+            if (m_tool != null)
+            {
+                if (m_context == QKeyListerContexts.Default && QCommon.ActiveTool != QCommon.DefaultTool)
+                {
+                    return false;
+                }
+                if (m_context == QKeyListerContexts.InTool && QCommon.ActiveTool != m_tool)
+                {
+                    return false;
+                }
+            }
+
+            if (useModifiers && (Alt != current.alt || Control != current.control || Shift != current.shift))
+            {
+                return false;
+            }
+
+            if (m_code != current.keyCode)
+            {
+                return false;
+            }
+
+            if (Time.time - timeLastClicked > clickDelay)
+            {
+                //QLoggerStatic.Debug($"Detected {this}");
+                timeLastClicked = Time.time;
+                return true;
+            }
+
+            return false;
+        }
+    }
+
+    internal class QKeyEventAction : QKeyEventReaction
+    {
+        internal QKeyListener.Trigger m_trigger;
+
+        internal QKeyEventAction(KeyCode code, EventModifiers modifiers, QKeyListerContexts context, ToolBaseSystem tool, QKeyListener.Trigger trigger) : base(code, modifiers, context, tool)
+        {
+            m_trigger = trigger;
+        }
     }
 
     internal enum QKeyListerContexts
     {
-        DefaultTool,
+        Default,
         InTool
     }
 
     internal class QKeyListener : MonoBehaviour
     {
-        private readonly float clickDelay = 0.3f;
-        private List<QKeyEvent> keys = new List<QKeyEvent>();
+        private List<QKeyEventAction> actions = new List<QKeyEventAction>();
 
-        private QKeyEvent clicked = null;
-        private float timeLastClicked;
+        private QKeyEventAction clicked = null;
 
         public delegate void Trigger();
         public ToolBaseSystem m_tool = null;
 
-        internal void RegisterKey(KeyCode code, EventModifiers modifiers, QKeyListerContexts context, Trigger trigger)
+        internal void RegisterKeyAction(KeyCode code, EventModifiers modifiers, QKeyListerContexts context, Trigger trigger)
         {
-            RegisterKey(new QKeyEvent(code, modifiers, context, trigger));
+            RegisterKeyAction(new QKeyEventAction(code, modifiers, context, m_tool, trigger));
         }
 
-        internal void RegisterKey(QKeyEvent key)
+        internal void RegisterKeyAction(QKeyEventAction key)
         {
-            keys.Add(key);
+            actions.Add(key);
         }
 
         public void OnGUI()
         {
-            if (UnityEngine.Event.current.type != EventType.KeyDown)
+            foreach (QKeyEventAction action in actions)
             {
-                return;
-            }
-
-            UnityEngine.Event current = UnityEngine.Event.current;
-
-            foreach (QKeyEvent key in keys)
-            {
-                if (m_tool != null)
+                if (action.IsPressed())
                 {
-                    if (key.m_context == QKeyListerContexts.DefaultTool && QCommon.ActiveTool != QCommon.DefaultTool)
-                    {
-                        continue;
-                    }
-                    if (key.m_context == QKeyListerContexts.InTool && QCommon.ActiveTool != m_tool)
-                    {
-                        continue;
-                    }
-                }
-
-                if (key.Alt != current.alt || key.Control != current.control || key.Shift != current.shift || key.m_code != current.keyCode)
-                {
-                    continue;
-                }
-
-                if (Time.time - timeLastClicked > clickDelay)
-                {
-                    QLoggerStatic.Debug($"Detected {key}");
-                    clicked = key;
-                    timeLastClicked = Time.time;
+                    clicked = action;
                     break;
                 }
             }
