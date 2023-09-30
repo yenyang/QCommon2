@@ -9,6 +9,7 @@
     <Import_RootNamespace>QCommonLib</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)QBox.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QCommon.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QKeyboard.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QKeyListener.cs" />
