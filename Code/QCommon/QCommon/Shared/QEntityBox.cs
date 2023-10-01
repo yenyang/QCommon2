@@ -1,6 +1,4 @@
 ﻿using Colossal.Entities;
-using Game.Net;
-using Game.Prefabs;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,15 +8,15 @@ using System.Text;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
-using UnityEngine;
 
 namespace QCommonLib
 {
-    public class QBox
+    internal struct QEntityBox
     {
-        internal class Log : QLoggerStatic { }
-        internal static EntityManager EntityManager => World.DefaultGameObjectInjectionWorld.EntityManager;
+        internal Entity Entity { get => _entity; set => _entity = value; }
+        private Entity _entity;
 
+        internal static EntityManager s_manager;
         private static bool s_initialised = false;
         internal static Dictionary<string, MethodInfo> s_EntityManagerMethods = new Dictionary<string, MethodInfo>()
         {
@@ -26,25 +24,14 @@ namespace QCommonLib
             { "SetComponentData", null }
         };
 
-        public Entity m_Entity
+        internal QEntityBox(Entity e)
         {
-            get
-            {
-                return _entity;
-            }
-            set
-            {
-                _entity = value;
-            }
-        }
-        protected Entity _entity;
+            _entity = e;
 
-        internal PrefabBase Prefab => QCommon.GetPrefab(EntityManager, _entity);
-        internal string PrefabName => QCommon.GetPrefabName(EntityManager, _entity);
-
-        public QBox()
-        {
+            // Set static fields
             if (s_initialised) return;
+
+            s_manager = World.DefaultGameObjectInjectionWorld.EntityManager;
 
             // Generate MethodInfo data for EntityManager
             string[] keys = s_EntityManagerMethods.Keys.ToArray();
@@ -69,73 +56,52 @@ namespace QCommonLib
             s_initialised = true;
         }
 
-
         #region Component Has/Get/Set
 
         public bool Has<T>() where T : unmanaged, IComponentData
         {
-            return Has<T>(_entity);
-        }
-        public bool Has(Type type)
-        {
-            return Has(type, _entity);
-        }
-        public T Get<T>() where T : unmanaged, IComponentData
-        {
-            return Get<T>(_entity);
-        }
-        public IComponentData Get(Type type)
-        {
-            return Get(type, _entity);
-        }
-        public void Set<T>(T comp) where T : unmanaged, IComponentData
-        {
-            Set<T>(_entity, comp);
-        }
-        public void Set(Type type, IComponentData comp)
-        {
-            Set(type, _entity, comp);
+            return s_manager.HasComponent<T>(_entity);
         }
 
-        public static bool Has<T>(Entity e) where T : unmanaged, IComponentData
+        public bool Has(Type type)
         {
-            return EntityManager.HasComponent<T>(e);
+            return HasComponentByType(type);
         }
-        public static bool Has(Type type, Entity e)
+
+        public T Get<T>() where T : unmanaged, IComponentData
         {
-            return HasComponentByType(type, e);
-        }
-        public static T Get<T>(Entity e) where T : unmanaged, IComponentData
-        {
-            if (!Has<T>(e))
+            if (!Has<T>())
             {
-                throw new Exception($"Component type {typeof(T)} not valid for entity {e} (Get<T>).");
+                throw new Exception($"Component type {typeof(T)} not valid for entity {_entity} (Get<T>).");
             }
-            return EntityManager.GetComponentData<T>(e);
+            return s_manager.GetComponentData<T>(_entity);
         }
-        public static IComponentData Get(Type type, Entity e)
+
+        public IComponentData Get(Type type)
         {
-            if (!Has(type, e))
+            if (!Has(type))
             {
-                throw new Exception($"Component type {type} not valid for entity {e} (Get(Type)).");
+                throw new Exception($"Component type {type} not valid for entity {_entity} (Get(Type)).");
             }
-            return GetComponentDataByType(type, e);
+            return GetComponentDataByType(type);
         }
-        public static void Set<T>(Entity e, T comp) where T : unmanaged, IComponentData
+
+        public void Set<T>(T comp) where T : unmanaged, IComponentData
         {
-            if (!Has<T>(e))
+            if (!Has<T>())
             {
-                throw new Exception($"Component type {typeof(T)} not valid for entity {e} (Set<T>).");
+                throw new Exception($"Component type {typeof(T)} not valid for entity {_entity} (Set<T>).");
             }
-            EntityManager.SetComponentData<T>(e, comp);
+            s_manager.SetComponentData<T>(_entity, comp);
         }
-        public static void Set(Type type, Entity e, IComponentData comp)
+
+        public void Set(Type type, IComponentData comp)
         {
-            if (!Has(type, e))
+            if (!Has(type))
             {
-                throw new Exception($"Component type {type} not valid for entity {e} (Set(Type)).");
+                throw new Exception($"Component type {type} not valid for entity {_entity} (Set(Type)).");
             }
-            SetComponentDataByType(type, e, comp);
+            SetComponentDataByType(type, comp);
         }
 
         #endregion
@@ -149,7 +115,7 @@ namespace QCommonLib
         }
         public void Add<T>(T data) where T : unmanaged, IComponentData
         {
-            EntityManager.AddComponentData(_entity, data);
+            s_manager.AddComponentData(_entity, data);
         }
         public void Add(Type type)
         {
@@ -157,43 +123,17 @@ namespace QCommonLib
         }
         public void Add(Type type, IComponentData data)
         {
-            AddComponentDataByType(type, _entity, data);
-        }
-
-        public static void Add<T>(Entity e) where T : unmanaged, IComponentData
-        {
-            Add(new T(), e);
-        }
-        public static void Add<T>(T data, Entity e) where T : unmanaged, IComponentData
-        {
-            EntityManager.AddComponentData(e, data);
-        }
-        public static void Add(Type type, Entity e)
-        {
-            Add(type, e, (IComponentData)Activator.CreateInstance(type));
-        }
-        public static void Add(Type type, Entity e, IComponentData data)
-        {
-            AddComponentDataByType(type, e, data);
+            AddComponentDataByType(type, data);
         }
 
 
         public void Remove<T>() where T : unmanaged, IComponentData
         {
-            EntityManager.RemoveComponent<T>(_entity);
+            s_manager.RemoveComponent<T>(_entity);
         }
         public void Remove(Type type)
         {
-            RemoveComponentByType(type, _entity);
-        }
-
-        public static void Remove<T>(Entity e) where T : unmanaged, IComponentData
-        {
-            EntityManager.RemoveComponent<T>(e);
-        }
-        public static void Remove(Type type, Entity e)
-        {
-            RemoveComponentByType(type, e);
+            RemoveComponentByType(type);
         }
 
         #endregion
@@ -205,22 +145,22 @@ namespace QCommonLib
 
         internal bool HasBuffer<T>() where T : unmanaged, IBufferElementData
         {
-            return EntityManager.HasBuffer<T>(_entity);
+            return s_manager.HasBuffer<T>(_entity);
         }
 
         internal static bool HasBuffer<T>(Entity entity) where T : unmanaged, IBufferElementData
         {
-            return EntityManager.HasBuffer<T>(entity);
+            return s_manager.HasBuffer<T>(entity);
         }
 
         internal bool HasBuffer(Type type)
         {
-            return HasBufferByType(type, _entity);
+            return HasBufferByType(_entity, type);
         }
 
         internal static bool HasBuffer(Entity entity, Type type)
         {
-            return HasBufferByType(type, entity);
+            return HasBufferByType(entity, type);
         }
 
         #endregion
@@ -234,7 +174,7 @@ namespace QCommonLib
 
         internal static void GetBuffer<T>(Entity entity, out List<T> buffer, bool isReadOnly = true) where T : unmanaged, IBufferElementData
         {
-            buffer = EntityManager.GetBuffer<T>(entity, isReadOnly).ToList();
+            buffer = s_manager.GetBuffer<T>(entity, isReadOnly).ToList();
         }
 
         internal void GetBuffer(Type type, out List<IBufferElementData> buffer, bool isReadOnly = true)
@@ -244,7 +184,7 @@ namespace QCommonLib
 
         internal static void GetBuffer(Entity entity, Type type, out List<IBufferElementData> buffer, bool isReadOnly = true)
         {
-            GetBufferComponentsByType(type, entity, out buffer, isReadOnly);
+            GetBufferComponentsByType(entity, type, out buffer, isReadOnly);
         }
 
         #endregion
@@ -335,7 +275,7 @@ namespace QCommonLib
 
         public static void BufferUpdateIterate<T>(Entity entity, Func<T, int, T> lambda) where T : unmanaged, IBufferElementData
         {
-            if (EntityManager.TryGetBuffer(entity, false, out DynamicBuffer<T> buffer))
+            if (s_manager.TryGetBuffer(entity, false, out DynamicBuffer<T> buffer))
             {
                 for (int i = 0; i < buffer.Length; i++)
                 {
@@ -430,11 +370,11 @@ namespace QCommonLib
         {
             FieldInfo field = GetEntityReferenceField(type);
 
-            MethodInfo method = typeof(EntityManager).GetMethod(nameof(EntityManager.GetBuffer), new Type[] { typeof(Entity), typeof(bool) });
+            MethodInfo method = typeof(EntityManager).GetMethod(nameof(s_manager.GetBuffer), new Type[] { typeof(Entity), typeof(bool) });
             MethodInfo generic = method.MakeGenericMethod(type);
             try
             {
-                DynamicBuffer<Game.Areas.SubArea> bufferValue = (DynamicBuffer<Game.Areas.SubArea>)generic.Invoke(EntityManager, new object[] { entity, false });
+                DynamicBuffer<Game.Areas.SubArea> bufferValue = (DynamicBuffer<Game.Areas.SubArea>)generic.Invoke(s_manager, new object[] { entity, false });
 
                 BufferUpdateIterate<Game.Areas.SubArea>(entity, (subArea, i) =>
                 {
@@ -454,48 +394,48 @@ namespace QCommonLib
 
         #region Basic Components
 
-        public static bool HasComponentByType(Type type, Entity e)
+        public bool HasComponentByType(Type type)
         {
-            MethodInfo hasComponent = typeof(EntityManager).GetMethod(nameof(EntityManager.HasComponent), new Type[] { typeof(Entity) });
+            MethodInfo hasComponent = typeof(EntityManager).GetMethod(nameof(s_manager.HasComponent), new Type[] { typeof(Entity) });
             MethodInfo generic = hasComponent.MakeGenericMethod(type);
-            return (bool)generic.Invoke(EntityManager, new object[] { e });
+            return (bool)generic.Invoke(s_manager, new object[] { _entity });
         }
 
-        public static IComponentData GetComponentDataByType(Type type, Entity e)
+        public IComponentData GetComponentDataByType(Type type)
         {
-            MethodInfo getComponentData = typeof(EntityManager).GetMethod(nameof(EntityManager.GetComponentData), new Type[] { typeof(Entity) });
+            MethodInfo getComponentData = typeof(EntityManager).GetMethod(nameof(s_manager.GetComponentData), new Type[] { typeof(Entity) });
             MethodInfo generic = getComponentData.MakeGenericMethod(type);
-            return (IComponentData)generic.Invoke(EntityManager, new object[] { e });
+            return (IComponentData)generic.Invoke(s_manager, new object[] { _entity });
         }
 
-        public static void SetComponentDataByType(Type type, Entity e, IComponentData comp)
+        public void SetComponentDataByType(Type type, IComponentData comp)
         {
             MethodInfo generic = s_EntityManagerMethods["SetComponentData"].MakeGenericMethod(type);
-            generic.Invoke(EntityManager, new object[] { e, comp });
+            generic.Invoke(s_manager, new object[] { _entity, comp });
         }
 
-        public static void AddComponentDataByType(Type type, Entity e, IComponentData data)
+        public void AddComponentDataByType(Type type, IComponentData data)
         {
             MethodInfo generic = s_EntityManagerMethods["AddComponentData"].MakeGenericMethod(type);
-            generic.Invoke(EntityManager, new object[] { e, data });
+            generic.Invoke(s_manager, new object[] { _entity, data });
         }
 
-        public static void RemoveComponentByType(Type type, Entity e)
+        public void RemoveComponentByType(Type type)
         {
-            MethodInfo removeComponent = typeof(EntityManager).GetMethod(nameof(EntityManager.RemoveComponent), new Type[] { typeof(Entity) });
+            MethodInfo removeComponent = typeof(EntityManager).GetMethod(nameof(s_manager.RemoveComponent), new Type[] { typeof(Entity) });
             MethodInfo generic = removeComponent.MakeGenericMethod(type);
-            generic.Invoke(EntityManager, new object[] { e });
+            generic.Invoke(s_manager, new object[] { _entity });
         }
 
         #endregion
 
         #region Buffers
 
-        public static bool HasBufferByType(Type type, Entity e)
+        public static bool HasBufferByType(Entity entity, Type type)
         {
-            MethodInfo hasBuffer = typeof(EntityManager).GetMethod(nameof(EntityManager.HasBuffer), new Type[] { typeof(Entity) });
+            MethodInfo hasBuffer = typeof(EntityManager).GetMethod(nameof(s_manager.HasBuffer), new Type[] { typeof(Entity) });
             MethodInfo generic = hasBuffer.MakeGenericMethod(type);
-            return (bool)generic.Invoke(EntityManager, new object[] { e });
+            return (bool)generic.Invoke(s_manager, new object[] { entity });
         }
 
         /// <summary>
@@ -507,14 +447,14 @@ namespace QCommonLib
         /// <returns>List<IBufferElementData> - The reference buffer's components</returns>
         public void GetBufferComponentsByType(Type type, out List<IBufferElementData> components, bool isReadOnly = true)
         {
-            GetBufferComponentsByType(type, _entity, out components, isReadOnly);
+            GetBufferComponentsByType(_entity, type, out components, isReadOnly);
         }
 
-        public static void GetBufferComponentsByType(Type type, Entity e, out List<IBufferElementData> components, bool isReadOnly = true)
+        public static void GetBufferComponentsByType(Entity entity, Type type, out List<IBufferElementData> components, bool isReadOnly = true)
         {
-            MethodInfo method = typeof(EntityManager).GetMethod(nameof(EntityManager.GetBuffer), new Type[] { typeof(Entity), typeof(bool) });
+            MethodInfo method = typeof(EntityManager).GetMethod(nameof(s_manager.GetBuffer), new Type[] { typeof(Entity), typeof(bool) });
             MethodInfo generic = method.MakeGenericMethod(type);
-            object bufferValue = generic.Invoke(EntityManager, new object[] { e, isReadOnly });
+            object bufferValue = generic.Invoke(s_manager, new object[] { entity, isReadOnly });
             IEnumerable data = (IEnumerable)bufferValue.GetType().GetMethod("AsNativeArray", BindingFlags.Instance | BindingFlags.Public).Invoke(bufferValue, null);
             components = new List<IBufferElementData>();
             foreach (object o in data)
