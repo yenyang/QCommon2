@@ -7,29 +7,29 @@ namespace QCommonLib
 {
     internal class QKeyEventReaction
     {
-        private readonly float clickDelay = 0.1f;
-        private static float timeLastClicked;
+        private readonly float _clickDelay = 0.1f;
+        private static float _timeLastClicked;
 
-        internal KeyCode m_code;
-        internal EventModifiers m_modifiers;
-        internal QKeyListerContexts m_context;
-        public ToolBaseSystem m_tool = null;
+        internal KeyCode m_Code;
+        internal EventModifiers m_Modifiers;
+        internal QKeyListerContexts m_Context;
+        public ToolBaseSystem m_Tool = null;
 
         internal QKeyEventReaction(KeyCode code, EventModifiers modifiers, QKeyListerContexts context, ToolBaseSystem tool)
         {
-            m_code = code;
-            m_modifiers = modifiers;
-            m_context = context;
-            m_tool = tool;
+            m_Code = code;
+            m_Modifiers = modifiers;
+            m_Context = context;
+            m_Tool = tool;
         }
 
-        internal bool Alt { get => (m_modifiers & EventModifiers.Alt) > 0; }
-        internal bool Control { get => (m_modifiers & EventModifiers.Control) > 0; }
-        internal bool Shift { get => (m_modifiers & EventModifiers.Shift) > 0; }
+        internal bool Alt { get => (m_Modifiers & EventModifiers.Alt) > 0; }
+        internal bool Control { get => (m_Modifiers & EventModifiers.Control) > 0; }
+        internal bool Shift { get => (m_Modifiers & EventModifiers.Shift) > 0; }
 
         public override string ToString()
         {
-            return $"QKeyEvent:{(Alt ? "A" : "")}{(Control ? "C" : "")}{(Shift ? "S" : "")}{(Alt || Control || Shift ? "-" : "")}{m_code} ({m_context})";
+            return $"QKeyEvent:{(Alt ? "A" : "")}{(Control ? "C" : "")}{(Shift ? "S" : "")}{(Alt || Control || Shift ? "-" : "")}{m_Code} ({m_Context})";
         }
 
         public bool IsPressed(bool useModifiers = true)
@@ -41,13 +41,13 @@ namespace QCommonLib
 
             Event current = Event.current;
 
-            if (m_tool != null)
+            if (m_Tool != null)
             {
-                if (m_context == QKeyListerContexts.Default && QCommon.ActiveTool != QCommon.DefaultTool)
+                if (m_Context == QKeyListerContexts.Default && QCommon.ActiveTool != QCommon.DefaultTool)
                 {
                     return false;
                 }
-                if (m_context == QKeyListerContexts.InTool && QCommon.ActiveTool != m_tool)
+                if (m_Context == QKeyListerContexts.InTool && QCommon.ActiveTool != m_Tool)
                 {
                     return false;
                 }
@@ -58,15 +58,15 @@ namespace QCommonLib
                 return false;
             }
 
-            if (m_code != current.keyCode)
+            if (m_Code != current.keyCode)
             {
                 return false;
             }
 
-            if (Time.time - timeLastClicked > clickDelay)
+            if (Time.time - _timeLastClicked > _clickDelay)
             {
                 //QLoggerStatic.Debug($"Detected {this}");
-                timeLastClicked = Time.time;
+                _timeLastClicked = Time.time;
                 return true;
             }
 

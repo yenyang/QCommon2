@@ -11,7 +11,6 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)QBox.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QCommon.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)QEntityBox.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QKeyboard.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QKeyListener.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QLogger.cs" />

@@ -19,7 +19,7 @@ namespace QCommonLib
         internal class Log : QLoggerStatic { }
         internal static EntityManager EntityManager => World.DefaultGameObjectInjectionWorld.EntityManager;
 
-        private static bool s_initialised = false;
+        private static bool s_Initialised = false;
         internal static Dictionary<string, MethodInfo> s_EntityManagerMethods = new Dictionary<string, MethodInfo>()
         {
             { "AddComponentData", null },
@@ -44,7 +44,7 @@ namespace QCommonLib
 
         public QBox()
         {
-            if (s_initialised) return;
+            if (s_Initialised) return;
 
             // Generate MethodInfo data for EntityManager
             string[] keys = s_EntityManagerMethods.Keys.ToArray();
@@ -66,7 +66,7 @@ namespace QCommonLib
                     throw new Exception($"Failed to find {keys[i]} method!");
                 }
             }
-            s_initialised = true;
+            s_Initialised = true;
         }
 
 
@@ -162,9 +162,9 @@ namespace QCommonLib
 
         public static void Add<T>(Entity e) where T : unmanaged, IComponentData
         {
-            Add(new T(), e);
+            Add(e, new T());
         }
-        public static void Add<T>(T data, Entity e) where T : unmanaged, IComponentData
+        public static void Add<T>(Entity e, T data) where T : unmanaged, IComponentData
         {
             EntityManager.AddComponentData(e, data);
         }

@@ -15,7 +15,7 @@ namespace QCommonLib
 
     public class QLoggerStatic
     {
-        internal static readonly QLogger instance;
+        internal static readonly QLogger s_Instance;
 
         /// <summary>
         /// Static wrapper for QLogger, instansiate with:
@@ -23,7 +23,7 @@ namespace QCommonLib
         /// </summary>
         static QLoggerStatic()
         {
-            instance = new QLogger();
+            s_Instance = new QLogger();
         }
 
         #region Redirect to instance
@@ -32,48 +32,48 @@ namespace QCommonLib
         /// </summary>
         public static bool IsDebug
         {
-            get => instance.IsDebug;
-            set => instance.IsDebug = value;
+            get => s_Instance.IsDebug;
+            set => s_Instance.IsDebug = value;
         }
 
         public static void Debug(string message, string code = "")
         {
-            instance?.Debug(message, code);
+            s_Instance?.Debug(message, code);
         }
 
         public static void Debug(Exception exception, string code = "")
         {
-            instance?.Debug(exception, code);
+            s_Instance?.Debug(exception, code);
         }
 
         public static void Info(string message, string code = "")
         {
-            instance?.Info(message, code);
+            s_Instance?.Info(message, code);
         }
 
         public static void Info(Exception exception, string code = "")
         {
-            instance?.Info(exception, code);
+            s_Instance?.Info(exception, code);
         }
 
         public static void Warning(string message, string code = "")
         {
-            instance?.Warning(message, code);
+            s_Instance?.Warning(message, code);
         }
 
         public static void Warning(Exception exception, string code = "")
         {
-            instance?.Warning(exception, code);
+            s_Instance?.Warning(exception, code);
         }
 
         public static void Error(string message, string code = "")
         {
-            instance?.Error(message, code);
+            s_Instance?.Error(message, code);
         }
 
         public static void Error(Exception exception, string code = "")
         {
-            instance?.Error(exception, code);
+            s_Instance?.Error(exception, code);
         }
         #endregion
     }
