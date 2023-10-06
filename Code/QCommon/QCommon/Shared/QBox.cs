@@ -69,6 +69,28 @@ namespace QCommonLib
             s_Initialised = true;
         }
 
+        /// <summary>
+        /// Get the field in an IBufferElementData reference buffer component that holds the actual entity reference
+        /// For example for Game.Areas.SubArea.m_area, it returns m_area
+        /// </summary>
+        /// <param name="type">The IBufferElementData struct type to search</param>
+        /// <returns>FieldInfo of this field</returns>
+        /// <exception cref="Exception">If no such field is found</exception>
+        public static FieldInfo GetEntityReferenceField(Type type)
+        {
+            FieldInfo field = null;
+            foreach (FieldInfo f in type.GetFields())
+            {
+                if (f.FieldType == typeof(Entity))
+                {
+                    field = f;
+                    break;
+                }
+            }
+            if (field == null) throw new Exception($"Entity field not found for type {type}");
+
+            return field;
+        }
 
         #region Component Has/Get/Set
 
@@ -139,7 +161,6 @@ namespace QCommonLib
         }
 
         #endregion
-
 
         #region Component Add/Remove
 
@@ -237,6 +258,11 @@ namespace QCommonLib
             buffer = EntityManager.GetBuffer<T>(entity, isReadOnly).ToList();
         }
 
+        internal static void GetBuffer<T>(Entity entity, out NativeArray<T> buffer, bool isReadOnly = true) where T : unmanaged, IBufferElementData
+        {
+            buffer = EntityManager.GetBuffer<T>(entity, isReadOnly).ToNativeArray(Allocator.Temp);
+        }
+
         internal void GetBuffer(Type type, out List<IBufferElementData> buffer, bool isReadOnly = true)
         {
             GetBufferComponentsByType(type, out buffer, isReadOnly);
@@ -251,27 +277,38 @@ namespace QCommonLib
 
         #region Set
 
-        internal void SetBuffer<T>(List<T> data) where T : unmanaged, IBufferElementData
-        {
-            SetBuffer<T>(_entity, data);
-        }
+        // Can't get this fucking bullshit to work
 
-        internal static void SetBuffer<T>(Entity entity, List<T> data) where T : unmanaged, IBufferElementData
-        {
-            EntityCommandBuffer ecb = new EntityCommandBuffer(Allocator.Temp);
+        //internal void SetBuffer<T>(List<T> data) where T : unmanaged, IBufferElementData
+        //{
+        //    var buffer = new NativeArray<T>(data.ToArray(), Allocator.Temp);
+        //    SetBuffer<T>(_entity, buffer);
+        //    buffer.Dispose();
+        //}
 
-            DynamicBuffer<T> buffer = ecb.SetBuffer<T>(entity);
-            buffer.Length = data.Count;
-            for (int i = 0; i < data.Count; i++)
-            {
-                buffer[i] = data[i];
-            }
-        }
+        //internal void SetBuffer<T>(NativeArray<T> data) where T : unmanaged, IBufferElementData
+        //{
+        //    SetBuffer<T>(_entity, data);
+        //    data.Dispose();
+        //}
 
-        internal void SetBuffer(Type type, List<IBufferElementData> data)
-        {
-            throw new NotImplementedException();
-        }
+        //internal static void SetBuffer<T>(Entity entity, NativeArray<T> data) where T : unmanaged, IBufferElementData
+        //{
+        //    EntityCommandBuffer ecb = new EntityCommandBuffer(Allocator.Temp);
+
+        //    DynamicBuffer<T> buffer = ecb.SetBuffer<T>(entity);
+        //    buffer.Length = data.Length;
+        //    for (int i = 0; i < data.Length; i++)
+        //    {
+        //        buffer[i] = data[i];
+        //    }
+        //    data.Dispose();
+        //}
+
+        //internal void SetBuffer(Type type, List<IBufferElementData> data)
+        //{
+        //    throw new NotImplementedException();
+        //}
 
         #endregion
 
@@ -320,6 +357,7 @@ namespace QCommonLib
 
         #endregion
 
+
         #region Entity reference buffers
 
         /// <summary>
@@ -328,7 +366,7 @@ namespace QCommonLib
         /// </summary>
         /// <typeparam name="T">The buffer to iterate through</typeparam>
         /// <param name="lambda">The code that each element is passed to</param>
-        public void IterateBufferUpdate<T>(Func<T, int, T> lambda) where T : unmanaged, IBufferElementData
+        public void BufferUpdateIterate<T>(Func<T, int, T> lambda) where T : unmanaged, IBufferElementData
         {
             BufferUpdateIterate(_entity, lambda);
         }
@@ -378,29 +416,6 @@ namespace QCommonLib
         //}
 
         /// <summary>
-        /// Get the field in an IBufferElementData reference buffer component that holds the actual entity reference
-        /// For example for Game.Areas.SubArea.m_area, it returns m_area
-        /// </summary>
-        /// <param name="type">The IBufferElementData struct type to search</param>
-        /// <returns>FieldInfo of this field</returns>
-        /// <exception cref="Exception">If no such field is found</exception>
-        public static FieldInfo GetEntityReferenceField(Type type)
-        {
-            FieldInfo field = null;
-            foreach (FieldInfo f in type.GetFields())
-            {
-                if (f.FieldType == typeof(Entity))
-                {
-                    field = f;
-                    break;
-                }
-            }
-            if (field == null) throw new Exception($"Entity field not found for type {type}");
-
-            return field;
-        }
-
-        /// <summary>
         /// Gets a NativeArray of all the entities in an IBufferElementData reference buffer component
         /// </summary>
         /// <param name="type">Type - The IBufferElementData struct</param>
@@ -448,6 +463,24 @@ namespace QCommonLib
             }
         }
 
+        public static void CreateNewReferenceBuffer(Entity entity, Type type, NativeArray<Entity> input, out List<IBufferElementData> output)
+        {
+            object a = new DynamicBuffer<Game.Areas.SubArea>();
+            Type dDynBuf = a.GetType().MakeGenericType(type);//, new Type[] { typeof(int), typeof(Allocator), typeof(NativeArrayOptions) });
+            object dynBuf = Activator.CreateInstance(dDynBuf, new object[] { input.Length, Allocator.Temp, NativeArrayOptions.ClearMemory });
+            QLoggerStatic.Debug($"\n{dynBuf}\n{dynBuf.GetType()}");
+
+            output = new List<IBufferElementData>();
+
+            FieldInfo field = GetEntityReferenceField(type);
+            foreach (Entity e in input)
+            {
+                object o = Activator.CreateInstance(type);
+                field.SetValue(o, e);
+                output.Add((IBufferElementData)o);
+            }
+        }
+
         #endregion
 
         #region Reflection
@@ -468,10 +501,10 @@ namespace QCommonLib
             return (IComponentData)generic.Invoke(EntityManager, new object[] { e });
         }
 
-        public static void SetComponentDataByType(Type type, Entity e, IComponentData comp)
+        public static void SetComponentDataByType(Type type, Entity e, IComponentData data)
         {
             MethodInfo generic = s_EntityManagerMethods["SetComponentData"].MakeGenericMethod(type);
-            generic.Invoke(EntityManager, new object[] { e, comp });
+            generic.Invoke(EntityManager, new object[] { e, data });
         }
 
         public static void AddComponentDataByType(Type type, Entity e, IComponentData data)
@@ -512,11 +545,27 @@ namespace QCommonLib
 
         public static void GetBufferComponentsByType(Type type, Entity e, out List<IBufferElementData> components, bool isReadOnly = true)
         {
+            //if (type == typeof(Game.Net.SubNet))
+            //{
+            //    DynamicBuffer<Game.Net.SubNet> a = EntityManager.GetBuffer<Game.Net.SubNet>(e);
+            //    Log.Debug($"BBB1 {type} {a.Length}");
+            //}
+            //else if (type == typeof(Game.Areas.SubArea))
+            //{
+            //    DynamicBuffer<Game.Areas.SubArea> a = EntityManager.GetBuffer<Game.Areas.SubArea>(e);
+            //    Log.Debug($"BBB2 {type} {a.Length}");
+            //}
+            //else
+            //{
+            //    Log.Debug($"BBB3 {type}");
+            //}
+
             MethodInfo method = typeof(EntityManager).GetMethod(nameof(EntityManager.GetBuffer), new Type[] { typeof(Entity), typeof(bool) });
             MethodInfo generic = method.MakeGenericMethod(type);
             object bufferValue = generic.Invoke(EntityManager, new object[] { e, isReadOnly });
             IEnumerable data = (IEnumerable)bufferValue.GetType().GetMethod("AsNativeArray", BindingFlags.Instance | BindingFlags.Public).Invoke(bufferValue, null);
             components = new List<IBufferElementData>();
+            //Log.Debug($"BBB2 {data.GetType()}");
             foreach (object o in data)
             {
                 components.Add((IBufferElementData)o);
