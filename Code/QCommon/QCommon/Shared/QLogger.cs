@@ -86,9 +86,13 @@ namespace QCommonLib
         internal Assembly AssemblyObject { get; private set; }
         internal string AssemblyName { get => AssemblyObject.GetName().Name; }
         /// <summary>
+        /// The full path and name of the log file
+        /// </summary>
+        internal string LogFile { get; private set; }
+        /// <summary>
         /// The ColossalOrder ILog instance
         /// </summary>
-        internal ILog Logger { get; private set; }
+        //internal ILog Logger { get; private set; }
         /// <summary>
         /// NewLine for the player's environment
         /// </summary>
@@ -121,9 +125,15 @@ namespace QCommonLib
         public QLogger(bool isDebug = true, string fileName = "")
         {
             AssemblyObject = Assembly.GetCallingAssembly() ?? throw new ArgumentNullException("QLogger: Failed to find calling assembly");
-            Logger = LogManager.GetLogger(fileName == "" ? AssemblyName : fileName);
+            LogFile = Path.Combine(Path.GetDirectoryName(Application.consoleLogPath), "Logs", (fileName == "" ? AssemblyName : fileName) + ".log") ;
+            //Logger = LogManager.GetLogger(fileName == "" ? AssemblyName : fileName);
             IsDebug = isDebug;
             Timer = Stopwatch.StartNew();
+
+            if (File.Exists(LogFile))
+            {
+                File.Delete(LogFile);
+            }
 
             AssemblyName details = AssemblyObject.GetName();
             string offset;
@@ -131,6 +141,10 @@ namespace QCommonLib
             {
                 TimeSpan ts = TimeZone.CurrentTimeZone.GetUtcOffset(DateTime.Now);
                 offset = string.Format("{0}:{1:D2}", ts.Hours, ts.Minutes);
+                if (ts.Hours > 0 || (ts.Hours == 0 && ts.Minutes > 0))
+                {
+                    offset = "+" + offset;
+                }
             }
             catch (Exception)
             {
@@ -142,6 +156,36 @@ namespace QCommonLib
         ~QLogger()
         {
             Info($"{AssemblyName} closing (" + DateTime.UtcNow.ToString(new CultureInfo("en-GB")) + ")");
+        }
+
+        internal void Do(string message, LogLevel logLevel, string code)
+        {
+            try
+            {
+                lock (LogFile)
+                {
+                    var ticks = Timer.ElapsedTicks;
+                    string msg = "";
+                    if (code != "") code += " ";
+
+                    int maxLen = Enum.GetNames(typeof(LogLevel)).Select(str => str.Length).Max();
+                    msg += string.Format($"{{0, -{maxLen}}}", $"[{logLevel}] ");
+
+                    long secs = ticks / Stopwatch.Frequency;
+                    long fraction = ticks % Stopwatch.Frequency;
+                    msg += string.Format($"{secs:n0}.{fraction:D7} | {code}{message}{NL}");
+
+                    using (StreamWriter w = File.AppendText(LogFile))
+                    {
+                        w.Write(msg);
+                    }
+                    //Logger.Info(msg);
+                }
+            }
+            catch (Exception e)
+            {
+                UnityEngine.Debug.Log("QLogger failed to log!\n" + e.ToStringNoTrace());
+            }
         }
 
         #region Debug
@@ -203,32 +247,6 @@ namespace QCommonLib
             Do(message, LogLevel.Error, code);
         }
         #endregion
-
-        internal void Do(string message, LogLevel logLevel, string code)
-        {
-            try
-            {
-                lock (Logger)
-                {
-                    var ticks = Timer.ElapsedTicks;
-                    string msg = "";
-                    if (code != "") code = " | " + code;
-
-                    int maxLen = Enum.GetNames(typeof(LogLevel)).Select(str => str.Length).Max();
-                    msg += string.Format($"{{0, -{maxLen + 3}}}", $"[{logLevel}] ");
-
-                    long secs = ticks / Stopwatch.Frequency;
-                    long fraction = ticks % Stopwatch.Frequency;
-                    msg += string.Format($"{secs:n0}.{fraction:D7}{code}{NL}{message}");
-
-                    Logger.Info(msg);
-                }
-            }
-            catch (Exception e)
-            {
-                UnityEngine.Debug.Log("QLogger failed to log!\n" + e.ToStringNoTrace());
-            }
-        }
     }
 
     public static class QExtensions

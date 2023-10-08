@@ -265,12 +265,12 @@ namespace QCommonLib
 
         internal void GetBuffer(Type type, out List<IBufferElementData> buffer, bool isReadOnly = true)
         {
-            GetBufferComponentsByType(type, out buffer, isReadOnly);
+            GetRefBufferComponentsByType(type, out buffer, isReadOnly);
         }
 
         internal static void GetBuffer(Entity entity, Type type, out List<IBufferElementData> buffer, bool isReadOnly = true)
         {
-            GetBufferComponentsByType(type, entity, out buffer, isReadOnly);
+            GetRefBufferComponentsByType(type, entity, out buffer, isReadOnly);
         }
 
         #endregion
@@ -420,11 +420,15 @@ namespace QCommonLib
         /// </summary>
         /// <param name="type">Type - The IBufferElementData struct</param>
         /// <param name="entities">out NativeArray<Entity> - the resulting array of entities</param>
-        public void GetReferenceBufferEntitiesByType(Type type, out NativeArray<Entity> entities)
+        public void GetRefBufferEntitiesByType(Type type, out NativeArray<Entity> entities)
+        {
+            GetRefBufferEntitiesByType(type, m_Entity, out entities);
+        }
+        public static void GetRefBufferEntitiesByType(Type type, Entity e, out NativeArray<Entity> entities)
         {
             FieldInfo field = GetEntityReferenceField(type);
 
-            GetBufferComponentsByType(type, out List<IBufferElementData> buffer);
+            GetRefBufferComponentsByType(type, e, out List<IBufferElementData> buffer);
             Entity[] list = new Entity[buffer.Count];
             for (int i = 0; i < buffer.Count; i++)
             {
@@ -436,12 +440,12 @@ namespace QCommonLib
         }
 
         // WIP
-        public void SetComponentBufferReferenceByType(Type type, int index, Entity element)
+        public void SetComponentBufferRefByType(Type type, int index, Entity element)
         {
-            SetComponentBufferReferenceByType(_entity, type, index, element);
+            SetComponentBufferRefByType(_entity, type, index, element);
         }
 
-        public static void SetComponentBufferReferenceByType(Entity entity, Type type, int index, Entity element)
+        public static void SetComponentBufferRefByType(Entity entity, Type type, int index, Entity element)
         {
             FieldInfo field = GetEntityReferenceField(type);
 
@@ -463,7 +467,7 @@ namespace QCommonLib
             }
         }
 
-        public static void CreateNewReferenceBuffer(Entity entity, Type type, NativeArray<Entity> input, out List<IBufferElementData> output)
+        public static void CreateNewRefBuffer(Entity entity, Type type, NativeArray<Entity> input, out List<IBufferElementData> output)
         {
             object a = new DynamicBuffer<Game.Areas.SubArea>();
             Type dDynBuf = a.GetType().MakeGenericType(type);//, new Type[] { typeof(int), typeof(Allocator), typeof(NativeArrayOptions) });
@@ -538,40 +542,48 @@ namespace QCommonLib
         /// <param name="components">out List<IBufferElementData> - The reference buffer's components</param>
         /// <param name="isReadOnly">Bool - Should these buffer components be read only?</param>
         /// <returns>List<IBufferElementData> - The reference buffer's components</returns>
-        public void GetBufferComponentsByType(Type type, out List<IBufferElementData> components, bool isReadOnly = true)
+        public void GetRefBufferComponentsByType(Type type, out List<IBufferElementData> components, bool isReadOnly = true)
         {
-            GetBufferComponentsByType(type, _entity, out components, isReadOnly);
+            GetRefBufferComponentsByType(type, _entity, out components, isReadOnly);
         }
 
-        public static void GetBufferComponentsByType(Type type, Entity e, out List<IBufferElementData> components, bool isReadOnly = true)
+        public static void GetRefBufferComponentsByType(Type type, Entity e, out List<IBufferElementData> components, bool isReadOnly = true)
         {
-            //if (type == typeof(Game.Net.SubNet))
-            //{
-            //    DynamicBuffer<Game.Net.SubNet> a = EntityManager.GetBuffer<Game.Net.SubNet>(e);
-            //    Log.Debug($"BBB1 {type} {a.Length}");
-            //}
-            //else if (type == typeof(Game.Areas.SubArea))
-            //{
-            //    DynamicBuffer<Game.Areas.SubArea> a = EntityManager.GetBuffer<Game.Areas.SubArea>(e);
-            //    Log.Debug($"BBB2 {type} {a.Length}");
-            //}
-            //else
-            //{
-            //    Log.Debug($"BBB3 {type}");
-            //}
-
-            MethodInfo method = typeof(EntityManager).GetMethod(nameof(EntityManager.GetBuffer), new Type[] { typeof(Entity), typeof(bool) });
-            MethodInfo generic = method.MakeGenericMethod(type);
-            object bufferValue = generic.Invoke(EntityManager, new object[] { e, isReadOnly });
-            IEnumerable data = (IEnumerable)bufferValue.GetType().GetMethod("AsNativeArray", BindingFlags.Instance | BindingFlags.Public).Invoke(bufferValue, null);
+            GetRefBufferComponentsAsDynBuffer(type, e, out object rawDynamicBuffer, isReadOnly);
+            IEnumerable data = (IEnumerable)rawDynamicBuffer.GetType().GetMethod("AsNativeArray", BindingFlags.Instance | BindingFlags.Public).Invoke(rawDynamicBuffer, null);
             components = new List<IBufferElementData>();
-            //Log.Debug($"BBB2 {data.GetType()}");
             foreach (object o in data)
             {
                 components.Add((IBufferElementData)o);
             }
             IDisposable disposable = data as IDisposable;
             disposable.Dispose();
+        }
+
+        public static void GetRefBufferComponentsAsDynBuffer(Type type, Entity e, out object bufferValue, bool isReadOnly = true)
+        {
+            MethodInfo method = typeof(EntityManager).GetMethod(nameof(EntityManager.GetBuffer), new Type[] { typeof(Entity), typeof(bool) });
+            MethodInfo generic = method.MakeGenericMethod(type);
+            bufferValue = generic.Invoke(EntityManager, new object[] { e, isReadOnly });
+        }
+
+        public static bool GetRefBufferComponentByType(Type type, Entity e, out IBufferElementData comp, bool isReadOnly = true)
+        {
+            QLoggerStatic.Debug($"ZZZ1 <{type}> {e.Index}");
+            MethodInfo method = typeof(EntityManager).GetMethod(nameof(EntityManager.GetBuffer), new Type[] { typeof(Entity), typeof(bool) });
+            MethodInfo generic = method.MakeGenericMethod(type);
+            object bufferValue = generic.Invoke(EntityManager, new object[] { e, isReadOnly });
+            FieldInfo[] fields = bufferValue.GetType().GetFields();
+            if (fields.Length == 0)
+            {
+                comp = null;
+                return false;
+            }
+            QLoggerStatic.Debug($"ZZZ2 {fields} {fields.Length}");
+            comp = (IBufferElementData)fields[0].GetValue(bufferValue);
+
+            QLoggerStatic.Debug($"Found {comp} <{comp.GetType()}>");
+            return true;
         }
 
         #endregion
