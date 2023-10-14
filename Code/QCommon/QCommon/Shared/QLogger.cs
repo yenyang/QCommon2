@@ -1,5 +1,4 @@
 ﻿using Colossal.Logging;
-using Colossal.Rendering;
 using System;
 using System.Diagnostics;
 using System.Globalization;
@@ -13,18 +12,12 @@ namespace QCommonLib
 {
     // Log file location %AppData%\..\LocalLow\Colossal Order\Cities Skylines II\Logs\
 
-    public class QLoggerStatic
+    public class QLog
     {
-        internal static readonly QLogger s_Instance;
-
         /// <summary>
-        /// Static wrapper for QLogger, instansiate with:
-        /// public class Log : QLoggerStatic { }
+        /// The debug logger object
         /// </summary>
-        static QLoggerStatic()
-        {
-            s_Instance = new QLogger();
-        }
+        internal static QLoggerCustom s_Instance = new(true);
 
         #region Redirect to instance
         /// <summary>
@@ -78,29 +71,16 @@ namespace QCommonLib
         #endregion
     }
 
-    public class QLogger
+    public class QLoggerCustom : QLoggerBase
     {
         /// <summary>
-        /// The calling assembly
+        /// Runtime counter
         /// </summary>
-        internal Assembly AssemblyObject { get; private set; }
-        internal string AssemblyName { get => AssemblyObject.GetName().Name; }
+        internal Stopwatch Timer { get; set; }
         /// <summary>
         /// The full path and name of the log file
         /// </summary>
         internal string LogFile { get; private set; }
-        /// <summary>
-        /// The ColossalOrder ILog instance
-        /// </summary>
-        //internal ILog Logger { get; private set; }
-        /// <summary>
-        /// NewLine for the player's environment
-        /// </summary>
-        internal string NL = Environment.NewLine;
-        /// <summary>
-        /// Runtime counter
-        /// </summary>
-        internal Stopwatch Timer { get; private set; }
         /// <summary>
         /// Log levels. Also output in log file.
         /// </summary>
@@ -110,87 +90,29 @@ namespace QCommonLib
             Info,
             Error,
         }
-        /// <summary>
-        /// Should debug messages be logged?
-        /// </summary>
-        public bool IsDebug { get; set; }
 
         /// <summary>
-        /// Create QLogger instance
+        /// Create QDebug instance
         /// </summary>
         /// <param name="isDebug">Override should debug messages be logged?</param>
-        /// <param name="fileName">Override the generated path/file name</param>
-        /// <param name="location">Override which log(s) minor messages are logged to</param>
-        /// <exception cref="ArgumentNullException"></exception>
-        public QLogger(bool isDebug = true, string fileName = "")
+        public QLoggerCustom(bool isDebug = true) : base(isDebug)
         {
-            AssemblyObject = Assembly.GetCallingAssembly() ?? throw new ArgumentNullException("QLogger: Failed to find calling assembly");
-            LogFile = Path.Combine(Path.GetDirectoryName(Application.consoleLogPath), "Logs", (fileName == "" ? AssemblyName : fileName) + ".log") ;
-            //Logger = LogManager.GetLogger(fileName == "" ? AssemblyName : fileName);
-            IsDebug = isDebug;
             Timer = Stopwatch.StartNew();
+            LogFile = Path.Combine(Path.GetDirectoryName(Application.consoleLogPath), "Logs", AssemblyName + "_debug.log");
 
             if (File.Exists(LogFile))
             {
                 File.Delete(LogFile);
             }
-
-            AssemblyName details = AssemblyObject.GetName();
-            string offset;
-            try
-            {
-                TimeSpan ts = TimeZone.CurrentTimeZone.GetUtcOffset(DateTime.Now);
-                offset = string.Format("{0}:{1:D2}", ts.Hours, ts.Minutes);
-                if (ts.Hours > 0 || (ts.Hours == 0 && ts.Minutes > 0))
-                {
-                    offset = "+" + offset;
-                }
-            }
-            catch (Exception)
-            {
-                offset = "Unknown";
-            }
-            Info($"{details.Name} v{details.Version} at " + DateTime.UtcNow.ToString(new CultureInfo("en-GB")) + $" ({offset})");
         }
 
-        ~QLogger()
-        {
-            Info($"{AssemblyName} closing (" + DateTime.UtcNow.ToString(new CultureInfo("en-GB")) + ")");
-        }
-
-        internal void Do(string message, LogLevel logLevel, string code)
-        {
-            try
-            {
-                lock (LogFile)
-                {
-                    var ticks = Timer.ElapsedTicks;
-                    string msg = "";
-                    if (code != "") code += " ";
-
-                    int maxLen = Enum.GetNames(typeof(LogLevel)).Select(str => str.Length).Max();
-                    msg += string.Format($"{{0, -{maxLen}}}", $"[{logLevel}] ");
-
-                    long secs = ticks / Stopwatch.Frequency;
-                    long fraction = ticks % Stopwatch.Frequency;
-                    msg += string.Format($"{secs:n0}.{fraction:D7} | {code}{message}{NL}");
-
-                    using (StreamWriter w = File.AppendText(LogFile))
-                    {
-                        w.Write(msg);
-                    }
-                    //Logger.Info(msg);
-                }
-            }
-            catch (Exception e)
-            {
-                UnityEngine.Debug.Log("QLogger failed to log!\n" + e.ToStringNoTrace());
-            }
-        }
+        //~QLoggerCustom()
+        //{
+        //    Info($"{AssemblyName} closing (" + DateTime.UtcNow.ToString(new CultureInfo("en-GB")) + $" ({m_TimezoneOffset})");
+        //}
 
         #region Debug
-        // Print the message to LogLocation only if IsDebug is true
-        public void Debug(string message, string code = "")
+        public override void Debug(string message, string code = "")
         {
             if (IsDebug)
             {
@@ -198,7 +120,7 @@ namespace QCommonLib
             }
         }
 
-        public void Debug(Exception exception, string code = "")
+        public override void Debug(Exception exception, string code = "")
         {
             if (IsDebug)
             {
@@ -208,45 +130,209 @@ namespace QCommonLib
         #endregion
 
         #region Info
-        // Print the message to LogLocation
-        public void Info(string message, string code = "")
+        public override void Info(string message, string code = "")
         {
             Do(message, LogLevel.Info, code);
         }
 
-        public void Info(Exception exception, string code = "")
+        public override void Info(Exception exception, string code = "")
         {
             Do(exception.ToString(), LogLevel.Info, code);
         }
         #endregion
 
         #region Warning
-        // Print the message everywhere
-        public void Warning(string message, string code = "")
+        public override void Warning(string message, string code = "")
         {
             Do(message, LogLevel.Error, code);
         }
 
-        public void Warning(Exception exception, string code = "")
+        public override void Warning(Exception exception, string code = "")
         {
             Do(exception.ToStringNoTrace(), LogLevel.Error, code);
         }
         #endregion
 
         #region Error
-        // Print the message everywhere, include stacktrace
-        public void Error(string message, string code = "")
+        public override void Error(string message, string code = "")
         {
             Do(message + NL + new StackTrace().ToString() + NL, LogLevel.Error, code);
         }
 
-        public void Error(Exception exception, string code = "")
+        public override void Error(Exception exception, string code = "")
         {
             string message = exception.ToString();
             if (exception.StackTrace is null || exception.StackTrace == "") message += NL + new StackTrace().ToString();
             Do(message, LogLevel.Error, code);
         }
         #endregion
+
+        private void Do(string message, LogLevel logLevel, string code)
+        {
+            try
+            {
+                var ticks = Timer.ElapsedTicks;
+                string msg = "";
+                if (code != "") code += " ";
+
+                int maxLen = Enum.GetNames(typeof(LogLevel)).Select(str => str.Length).Max();
+                msg += string.Format($"{{0, -{maxLen}}}", $"[{logLevel}] ");
+
+                long secs = ticks / Stopwatch.Frequency;
+                long fraction = ticks % Stopwatch.Frequency;
+                msg += string.Format($"{secs:n0}.{fraction:D7} | {code}{message}{NL}");
+
+                using StreamWriter w = File.AppendText(LogFile);
+                w.Write(message);
+            }
+            catch (Exception e)
+            {
+                UnityEngine.Debug.Log("QLogger failed to log!\n" + e.ToStringNoTrace());
+            }
+        }
+    }
+
+    public class QLoggerCO : QLoggerBase
+    {
+        /// <summary>
+        /// The ColossalOrder ILog instance
+        /// </summary>
+        internal ILog Logger { get; set; }
+
+        public QLoggerCO(bool isDebug = true) : base(isDebug)
+        {
+            Logger = LogManager.GetLogger(AssemblyName);
+        }
+
+        #region Debug
+        public override void Debug(string message, string code = "")
+        {
+            if (IsDebug)
+            {
+                if (code != "") code += " ";
+                Logger.Debug(code + message);
+            }
+        }
+
+        public override void Debug(Exception exception, string code = "")
+        {
+            if (IsDebug)
+            {
+                Logger.Debug(exception, code);
+            }
+        }
+        #endregion
+
+        #region Info
+        public override void Info(string message, string code = "")
+        {
+            if (code != "") code += " ";
+            Logger.Info(code + message);
+        }
+
+        public override void Info(Exception exception, string code = "")
+        {
+            Logger.Info(exception, code);
+        }
+        #endregion
+
+        #region Warning
+        public override void Warning(string message, string code = "")
+        {
+            if (code != "") code += " ";
+            Logger.Warn(code + message);
+        }
+
+        public override void Warning(Exception exception, string code = "")
+        {
+            Logger.Warn(exception, code);
+        }
+        #endregion
+
+        #region Error
+        public override void Error(string message, string code = "")
+        {
+            if (code != "") code += " ";
+            Logger.Error(code + message + NL + new StackTrace().ToString() + NL);
+        }
+
+        public override void Error(Exception exception, string code = "")
+        {
+            if (code != "") code += " ";
+            string message = exception.ToString();
+            if (exception.StackTrace is null || exception.StackTrace == "") message += NL + new StackTrace().ToString();
+            Logger.Error(code + message + NL);
+        }
+        #endregion
+    }
+
+    public abstract class QLoggerBase
+    {
+        /// <summary>
+        /// The calling assembly
+        /// </summary>
+        internal Assembly AssemblyObject { get; set; }
+        internal string AssemblyName { get => AssemblyObject.GetName().Name; }
+        /// <summary>
+        /// NewLine for the player's environment
+        /// </summary>
+        internal string NL = Environment.NewLine;
+        /// <summary>
+        /// String for the timezone offset, eg "+1:00"
+        /// </summary>
+        internal static string m_TimezoneOffset;
+        /// <summary>
+        /// Should debug messages be logged?
+        /// </summary>
+        public bool IsDebug { get; set; }
+
+        /// <summary>
+        /// Create QLogger instance
+        /// </summary>
+        /// <param name="isDebug">Override should debug messages be logged?</param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public QLoggerBase(bool isDebug = true)
+        {
+            AssemblyObject = Assembly.GetCallingAssembly() ?? throw new ArgumentNullException("QLogger: Failed to find calling assembly");
+            IsDebug = isDebug;
+
+            AssemblyName details = AssemblyObject.GetName();
+            m_TimezoneOffset = GetTimezoneOffset();
+
+            Info($"{details.Name} v{details.Version} at " + DateTime.UtcNow.ToString(new CultureInfo("en-GB")) + $" ({m_TimezoneOffset})");
+        }
+
+        ~QLoggerBase()
+        {
+            Info($"{AssemblyName} closing (" + DateTime.UtcNow.ToString(new CultureInfo("en-GB")) + $" ({m_TimezoneOffset})");
+        }
+
+        public abstract void Debug(string message, string code = "");
+        public abstract void Debug(Exception exception, string code = "");
+        public abstract void Info(string message, string code = "");
+        public abstract void Info(Exception exception, string code = "");
+        public abstract void Warning(string message, string code = "");
+        public abstract void Warning(Exception exception, string code = "");
+        public abstract void Error(string message, string code = "");
+        public abstract void Error(Exception exception, string code = "");
+
+        public static string GetTimezoneOffset()
+        {
+            string offset = "Unknown";
+            try
+            {
+                TimeSpan ts = TimeZone.CurrentTimeZone.GetUtcOffset(DateTime.Now);
+                offset = string.Format("{0}:{1:D2}", ts.Hours, ts.Minutes);
+                if (ts.Hours > 0 || (ts.Hours == 0 && ts.Minutes > 0))
+                {
+                    offset = "+" + offset;
+                }
+            }
+            catch (Exception) { }
+
+            return offset;
+        }
+
     }
 
     public static class QExtensions
@@ -266,7 +352,3 @@ namespace QCommonLib
         }
     }
 }
-
-
-
-

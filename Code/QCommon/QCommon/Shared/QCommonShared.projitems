@@ -14,5 +14,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)QKeyboard.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QKeyListener.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QLogger.cs" />
+    <Compile Include="..\..\QCommon\Repo\Code\QCommon\QCommon\Shared\QLoggerCO.cs" />
   </ItemGroup>
 </Project>
