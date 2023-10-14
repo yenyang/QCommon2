@@ -1,26 +1,21 @@
 ﻿using Colossal.Entities;
-using Game.Net;
 using Game.Prefabs;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using Unity.Collections;
 using Unity.Entities;
-using Unity.Mathematics;
-using UnityEngine;
 
 namespace QCommonLib
 {
     public class QBox
     {
-        internal class Log : QLoggerStatic { }
         internal static EntityManager EntityManager => World.DefaultGameObjectInjectionWorld.EntityManager;
 
         private static bool s_Initialised = false;
-        internal static Dictionary<string, MethodInfo> s_EntityManagerMethods = new Dictionary<string, MethodInfo>()
+        internal static Dictionary<string, MethodInfo> s_EntityManagerMethods = new()
         {
             { "AddComponentData", null },
             { "SetComponentData", null }
@@ -463,7 +458,7 @@ namespace QCommonLib
             }
             catch (Exception ex)
             {
-                QLoggerStatic.Debug(ex.Message);
+                QLog.Debug(ex.Message);
             }
         }
 
@@ -472,7 +467,7 @@ namespace QCommonLib
             object a = new DynamicBuffer<Game.Areas.SubArea>();
             Type dDynBuf = a.GetType().MakeGenericType(type);//, new Type[] { typeof(int), typeof(Allocator), typeof(NativeArrayOptions) });
             object dynBuf = Activator.CreateInstance(dDynBuf, new object[] { input.Length, Allocator.Temp, NativeArrayOptions.ClearMemory });
-            QLoggerStatic.Debug($"\n{dynBuf}\n{dynBuf.GetType()}");
+            QLog.Debug($"\n{dynBuf}\n{dynBuf.GetType()}");
 
             output = new List<IBufferElementData>();
 
@@ -569,7 +564,6 @@ namespace QCommonLib
 
         public static bool GetRefBufferComponentByType(Type type, Entity e, out IBufferElementData comp, bool isReadOnly = true)
         {
-            QLoggerStatic.Debug($"ZZZ1 <{type}> {e.Index}");
             MethodInfo method = typeof(EntityManager).GetMethod(nameof(EntityManager.GetBuffer), new Type[] { typeof(Entity), typeof(bool) });
             MethodInfo generic = method.MakeGenericMethod(type);
             object bufferValue = generic.Invoke(EntityManager, new object[] { e, isReadOnly });
@@ -579,10 +573,8 @@ namespace QCommonLib
                 comp = null;
                 return false;
             }
-            QLoggerStatic.Debug($"ZZZ2 {fields} {fields.Length}");
             comp = (IBufferElementData)fields[0].GetValue(bufferValue);
 
-            QLoggerStatic.Debug($"Found {comp} <{comp.GetType()}>");
             return true;
         }
 

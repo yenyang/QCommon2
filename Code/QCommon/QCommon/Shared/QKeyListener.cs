@@ -1,5 +1,4 @@
-﻿
-using Game.Tools;
+﻿using Game.Tools;
 using System.Collections.Generic;
 using UnityEngine;
 

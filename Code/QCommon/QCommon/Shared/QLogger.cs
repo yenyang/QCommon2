@@ -104,6 +104,8 @@ namespace QCommonLib
             {
                 File.Delete(LogFile);
             }
+
+            Init();
         }
 
         //~QLoggerCustom()
@@ -171,19 +173,22 @@ namespace QCommonLib
         {
             try
             {
-                var ticks = Timer.ElapsedTicks;
-                string msg = "";
-                if (code != "") code += " ";
+                lock (LogFile)
+                {
+                    var ticks = Timer.ElapsedTicks;
+                    string msg = "";
+                    if (code != "") code += " ";
 
-                int maxLen = Enum.GetNames(typeof(LogLevel)).Select(str => str.Length).Max();
-                msg += string.Format($"{{0, -{maxLen}}}", $"[{logLevel}] ");
+                    int maxLen = Enum.GetNames(typeof(LogLevel)).Select(str => str.Length).Max();
+                    msg += string.Format($"{{0, -{maxLen}}}", $"[{logLevel}] ");
 
-                long secs = ticks / Stopwatch.Frequency;
-                long fraction = ticks % Stopwatch.Frequency;
-                msg += string.Format($"{secs:n0}.{fraction:D7} | {code}{message}{NL}");
+                    long secs = ticks / Stopwatch.Frequency;
+                    long fraction = ticks % Stopwatch.Frequency;
+                    msg += string.Format($"{secs:n0}.{fraction:D7} | {code}{message}{NL}");
 
-                using StreamWriter w = File.AppendText(LogFile);
-                w.Write(message);
+                    using StreamWriter w = File.AppendText(LogFile);
+                    w.Write(msg);
+                }
             }
             catch (Exception e)
             {
@@ -199,9 +204,10 @@ namespace QCommonLib
         /// </summary>
         internal ILog Logger { get; set; }
 
-        public QLoggerCO(bool isDebug = true) : base(isDebug)
+        public QLoggerCO(bool isDebug = true, string filename = "") : base(isDebug)
         {
-            Logger = LogManager.GetLogger(AssemblyName);
+            Logger = LogManager.GetLogger(filename == "" ? AssemblyName : filename);
+            Init();
         }
 
         #region Debug
@@ -286,18 +292,19 @@ namespace QCommonLib
         /// </summary>
         public bool IsDebug { get; set; }
 
-        /// <summary>
-        /// Create QLogger instance
-        /// </summary>
-        /// <param name="isDebug">Override should debug messages be logged?</param>
-        /// <exception cref="ArgumentNullException"></exception>
         public QLoggerBase(bool isDebug = true)
         {
             AssemblyObject = Assembly.GetCallingAssembly() ?? throw new ArgumentNullException("QLogger: Failed to find calling assembly");
-            IsDebug = isDebug;
-
-            AssemblyName details = AssemblyObject.GetName();
             m_TimezoneOffset = GetTimezoneOffset();
+            IsDebug = isDebug;
+        }
+
+        /// <summary>
+        /// To be called from children's constructor
+        /// </summary>
+        protected void Init()
+        {
+            AssemblyName details = AssemblyObject.GetName();
 
             Info($"{details.Name} v{details.Version} at " + DateTime.UtcNow.ToString(new CultureInfo("en-GB")) + $" ({m_TimezoneOffset})");
         }
