@@ -12,6 +12,9 @@ namespace QCommonLib
 {
     // Log file location %AppData%\..\LocalLow\Colossal Order\Cities Skylines II\Logs\
 
+    /// <summary>
+    /// Static log for quick debugging, goes to {AssemblyName}_debug.log
+    /// </summary>
     public class QLog
     {
         /// <summary>
@@ -105,13 +108,14 @@ namespace QCommonLib
                 File.Delete(LogFile);
             }
 
-            Init();
+            AssemblyName details = AssemblyObject.GetName();
+            Info($"{details.Name} v{details.Version} at " + DateTime.UtcNow.ToString(new CultureInfo("en-GB")) + $" ({m_TimezoneOffset})");
         }
 
-        //~QLoggerCustom()
-        //{
-        //    Info($"{AssemblyName} closing (" + DateTime.UtcNow.ToString(new CultureInfo("en-GB")) + $" ({m_TimezoneOffset})");
-        //}
+        ~QLoggerCustom()
+        {
+            Info($"{AssemblyName} closing (" + DateTime.UtcNow.ToString(new CultureInfo("en-GB")) + $" ({m_TimezoneOffset})");
+        }
 
         #region Debug
         public override void Debug(string message, string code = "")
@@ -203,18 +207,28 @@ namespace QCommonLib
         /// The ColossalOrder ILog instance
         /// </summary>
         internal ILog Logger { get; set; }
+        private readonly bool _mirrorToStatic;
 
-        public QLoggerCO(bool isDebug = true, string filename = "") : base(isDebug)
+        public QLoggerCO(bool isDebug = true, string filename = "", bool mirrorToStatic = true) : base(isDebug)
         {
+            _mirrorToStatic = mirrorToStatic;
             Logger = LogManager.GetLogger(filename == "" ? AssemblyName : filename);
-            Init();
+
+            AssemblyName details = AssemblyObject.GetName();
+            Logger.Info($"{details.Name} v{details.Version} at " + DateTime.UtcNow.ToString(new CultureInfo("en-GB")) + $" ({m_TimezoneOffset})");
+        }
+
+        ~QLoggerCO()
+        {
+            Logger.Info($"{AssemblyName} closing (" + DateTime.UtcNow.ToString(new CultureInfo("en-GB")) + $" ({m_TimezoneOffset})");
         }
 
         #region Debug
         public override void Debug(string message, string code = "")
         {
             if (IsDebug)
-            {
+            { 
+                if (_mirrorToStatic) QLog.Debug(message, code);
                 if (code != "") code += " ";
                 Logger.Debug(code + message);
             }
@@ -224,6 +238,7 @@ namespace QCommonLib
         {
             if (IsDebug)
             {
+                if (_mirrorToStatic) QLog.Debug(exception, code);
                 Logger.Debug(exception, code);
             }
         }
@@ -232,12 +247,14 @@ namespace QCommonLib
         #region Info
         public override void Info(string message, string code = "")
         {
+            if (_mirrorToStatic) QLog.Info(message, code);
             if (code != "") code += " ";
             Logger.Info(code + message);
         }
 
         public override void Info(Exception exception, string code = "")
         {
+            if (_mirrorToStatic) QLog.Info(exception, code);
             Logger.Info(exception, code);
         }
         #endregion
@@ -245,12 +262,14 @@ namespace QCommonLib
         #region Warning
         public override void Warning(string message, string code = "")
         {
+            if (_mirrorToStatic) QLog.Warning(message, code);
             if (code != "") code += " ";
             Logger.Warn(code + message);
         }
 
         public override void Warning(Exception exception, string code = "")
         {
+            if (_mirrorToStatic) QLog.Warning(exception, code);
             Logger.Warn(exception, code);
         }
         #endregion
@@ -258,12 +277,14 @@ namespace QCommonLib
         #region Error
         public override void Error(string message, string code = "")
         {
+            if (_mirrorToStatic) QLog.Error(message, code);
             if (code != "") code += " ";
             Logger.Error(code + message + NL + new StackTrace().ToString() + NL);
         }
 
         public override void Error(Exception exception, string code = "")
         {
+            if (_mirrorToStatic) QLog.Error(exception, code);
             if (code != "") code += " ";
             string message = exception.ToString();
             if (exception.StackTrace is null || exception.StackTrace == "") message += NL + new StackTrace().ToString();
@@ -297,21 +318,6 @@ namespace QCommonLib
             AssemblyObject = Assembly.GetCallingAssembly() ?? throw new ArgumentNullException("QLogger: Failed to find calling assembly");
             m_TimezoneOffset = GetTimezoneOffset();
             IsDebug = isDebug;
-        }
-
-        /// <summary>
-        /// To be called from children's constructor
-        /// </summary>
-        protected void Init()
-        {
-            AssemblyName details = AssemblyObject.GetName();
-
-            Info($"{details.Name} v{details.Version} at " + DateTime.UtcNow.ToString(new CultureInfo("en-GB")) + $" ({m_TimezoneOffset})");
-        }
-
-        ~QLoggerBase()
-        {
-            Info($"{AssemblyName} closing (" + DateTime.UtcNow.ToString(new CultureInfo("en-GB")) + $" ({m_TimezoneOffset})");
         }
 
         public abstract void Debug(string message, string code = "");
