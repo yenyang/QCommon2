@@ -180,7 +180,7 @@ namespace QCommonLib
         {
             Add(e, new T());
         }
-        public static void Add<T>(Entity e, T data) where T : unmanaged, IComponentData
+        public static void Add<T>(T data, Entity e) where T : unmanaged, IComponentData
         {
             EntityManager.AddComponentData(e, data);
         }
@@ -234,7 +234,7 @@ namespace QCommonLib
             return HasBufferByType(type, _entity);
         }
 
-        internal static bool HasBuffer(Entity entity, Type type)
+        internal static bool HasBuffer(Type type, Entity entity)
         {
             return HasBufferByType(type, entity);
         }
