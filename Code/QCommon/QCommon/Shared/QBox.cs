@@ -178,7 +178,7 @@ namespace QCommonLib
 
         public static void Add<T>(Entity e) where T : unmanaged, IComponentData
         {
-            Add(e, new T());
+            Add(new T(), e);
         }
         public static void Add<T>(T data, Entity e) where T : unmanaged, IComponentData
         {
