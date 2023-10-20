@@ -1,16 +1,21 @@
 ﻿using Colossal.Entities;
 using Game.Prefabs;
 using Game.Tools;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 using Unity.Entities;
+using Unity.Mathematics;
 
 namespace QCommonLib
 {
     public class QCommon
     {
+        public static float3 Float3Invalid()
+        {
+            float3 f = new();
+            f.SetInvalid();
+            return f;
+        }
+
         public static long ElapsedMilliseconds(long startTime)
         {
             long endTime = Stopwatch.GetTimestamp();

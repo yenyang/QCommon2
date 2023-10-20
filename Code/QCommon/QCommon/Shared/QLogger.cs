@@ -347,21 +347,4 @@ namespace QCommonLib
         }
 
     }
-
-    public static class QExtensions
-    {
-        public static string ToStringNoTrace(this Exception e)
-        {
-            StringBuilder stringBuilder = new StringBuilder(e.GetType().ToString());
-            stringBuilder.Append(": ").Append(e.Message);
-            return stringBuilder.ToString();
-        }
-
-        public static string RemoveWhitespace(this string input)
-        {
-            return new string(input.ToCharArray()
-                .Where(c => !Char.IsWhiteSpace(c))
-                .ToArray());
-        }
-    }
 }
