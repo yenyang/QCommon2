@@ -1,5 +1,6 @@
 ﻿using Colossal.Mathematics;
 using System;
+using System.Text;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -85,6 +86,7 @@ namespace QCommonLib
                 }
                 if (gnEdgeGeometry.HasComponent(e) || gnEndNodeGeometry.HasComponent(e) || gnNodeGeometry.HasComponent(e) || gnStartNodeGeometry.HasComponent(e))
                 {
+                    m_hasPositionRead = true;
                     m_hasPositionWrite = true;
                 }
                 if (gnNode.HasComponent(e))
@@ -94,6 +96,7 @@ namespace QCommonLib
                 }
                 if (gnCurve.HasComponent(e) || gpObjectGeometryData.HasComponent(e) || grCullingInfo.HasComponent(e))
                 {
+                    m_hasPositionRead = true;
                     m_hasPositionWrite = true;
                 }
             }
@@ -181,33 +184,69 @@ namespace QCommonLib
         {
             get
             {
-                //StringBuilder sb = new($"Position.Get for {e.D()} '{QCommon.GetPrefabName(EntityManager, e)}': ");
+                StringBuilder sb = new($"Pos.GET {m_Entity.D()}: ");
                 float3 result;
 
                 if (goTransform.HasComponent(m_Entity))
                 {
-                    //sb.Append($"goTransform");
+                    sb.Append($"goTransform");
                     result = goTransform.GetRefRO(m_Entity).ValueRO.m_Position;
                 }
                 else if (gaGeometry.HasComponent(m_Entity))
                 {
-                    //sb.Append($"gaGeometry");
+                    sb.Append($"gaGeometry");
                     result = gaGeometry.GetRefRO(m_Entity).ValueRO.m_CenterPosition;
                 }
                 else if (gpObjectGeometryData.HasComponent(m_Entity))
                 {
-                    //sb.Append($"gpObjectGeometryData");
+                    sb.Append($"gpObjectGeometryData");
                     result = gpObjectGeometryData.GetRefRO(m_Entity).ValueRO.m_Pivot;
                 }
                 else if (gnNode.HasComponent(m_Entity))
                 {
-                    //sb.Append($"gnNode");
+                    sb.Append($"gnNode");
                     result = gnNode.GetRefRO(m_Entity).ValueRO.m_Position;
                 }
                 else if (gnNodeGeometry.HasComponent(m_Entity))
                 {
-                    //sb.Append($"gnNodeGeometry");
+                    sb.Append($"gnNodeGeometry");
                     result = gnNodeGeometry.GetRefRO(m_Entity).ValueRO.m_Position;
+                }
+                // The following are not central and should only be used for calculating movement delta
+                else if (grCullingInfo.HasComponent(m_Entity))
+                {
+                    sb.Append($"grCullingInfo");
+                    result = grCullingInfo.GetRefRO(m_Entity).ValueRO.m_Bounds.min;
+                }
+                else if (gnEdgeGeometry.HasComponent(m_Entity))
+                {
+                    sb.Append($"gnEdgeGeometry");
+                    result = gnEdgeGeometry.GetRefRO(m_Entity).ValueRO.m_Bounds.min;
+                }
+                else if (gnEndNodeGeometry.HasComponent(m_Entity))
+                {
+                    sb.Append($"gnEndNodeGeometry");
+                    result = gnEndNodeGeometry.GetRefRO(m_Entity).ValueRO.m_Geometry.m_Bounds.min;
+                }
+                else if (gnNodeGeometry.HasComponent(m_Entity))
+                {
+                    sb.Append($"gnNodeGeometry");
+                    result = gnNodeGeometry.GetRefRO(m_Entity).ValueRO.m_Bounds.min;
+                }
+                else if (gnStartNodeGeometry.HasComponent(m_Entity))
+                {
+                    sb.Append($"gnStartNodeGeometry");
+                    result = gnStartNodeGeometry.GetRefRO(m_Entity).ValueRO.m_Geometry.m_Bounds.min;
+                }
+                else if (gpObjectGeometryData.HasComponent(m_Entity))
+                {
+                    sb.Append($"gpObjectGeometryData");
+                    result = gpObjectGeometryData.GetRefRO(m_Entity).ValueRO.m_Bounds.min;
+                }
+                else if (gnCurve.HasComponent(m_Entity))
+                {
+                    sb.Append($"gnCurve");
+                    result = gnCurve.GetRefRO(m_Entity).ValueRO.m_Bezier.a;
                 }
                 else
                 {
@@ -217,6 +256,7 @@ namespace QCommonLib
                 }
 
                 //QLog.Debug(sb.ToString());
+
                 return result;
             }
 
@@ -224,38 +264,38 @@ namespace QCommonLib
             {
                 if (!EntityManager.Exists(m_Entity)) return;
 
-                //StringBuilder sb = new($"Position.Set for {m_Entity.D()} '{QCommon.GetPrefabName(EntityManager, m_Entity)}': ");
-
                 float3 delta = value - Position;
+
+                StringBuilder sb = new($"Pos.Set {m_Entity.D()} (value:{value.Debug()}, delta:{delta.Debug()}, oldPos:{Position.Debug()}): ");
 
                 if (gaGeometry.HasComponent(m_Entity))
                 {
-                    //sb.Append($"gaGeometry, ");
+                    sb.Append($"gaGeometry, ");
                     gaGeometry.GetRefRW(m_Entity).ValueRW.m_CenterPosition = value;
                     gaGeometry.GetRefRW(m_Entity).ValueRW.m_Bounds = _MoveBounds3(gaGeometry.GetRefRO(m_Entity).ValueRO.m_Bounds, delta);
                 }
 
                 if (gnCurve.HasComponent(m_Entity))
                 {
-                    //sb.Append($"gnCurve, ");
+                    sb.Append($"gnCurve, ");
                     gnCurve.GetRefRW(m_Entity).ValueRW.m_Bezier = _MoveBezier4x3(gnCurve.GetRefRO(m_Entity).ValueRO.m_Bezier, delta);
                 }
 
                 if (gnNode.HasComponent(m_Entity))
                 {
-                    //sb.Append($"gnNode, ");
+                    sb.Append($"gnNode, ");
                     gnNode.GetRefRW(m_Entity).ValueRW.m_Position = value;
                 }
 
                 if (gnNodeGeometry.HasComponent(m_Entity))
                 {
-                    //sb.Append($"gnNodeGeometry, ");
+                    sb.Append($"gnNodeGeometry, ");
                     gnNodeGeometry.GetRefRW(m_Entity).ValueRW.m_Bounds = _MoveBounds3(gnNodeGeometry.GetRefRO(m_Entity).ValueRO.m_Bounds, delta);
                 }
 
                 if (gnEdgeGeometry.HasComponent(m_Entity))
                 {
-                    //sb.Append($"gnEdgeGeometry, ");
+                    sb.Append($"gnEdgeGeometry, ");
                     gnEdgeGeometry.GetRefRW(m_Entity).ValueRW.m_Start = _MoveSegment(gnEdgeGeometry.GetRefRO(m_Entity).ValueRO.m_Start, delta);
                     gnEdgeGeometry.GetRefRW(m_Entity).ValueRW.m_End = _MoveSegment(gnEdgeGeometry.GetRefRO(m_Entity).ValueRO.m_End, delta);
                     gnEdgeGeometry.GetRefRW(m_Entity).ValueRW.m_Bounds = _MoveBounds3(gnEdgeGeometry.GetRefRO(m_Entity).ValueRO.m_Bounds, delta);
@@ -263,34 +303,36 @@ namespace QCommonLib
 
                 if (gnEndNodeGeometry.HasComponent(m_Entity))
                 {
-                    //sb.Append($"gnEndNodeGeometry, ");
+                    sb.Append($"gnEndNodeGeometry, ");
                     gnEndNodeGeometry.GetRefRW(m_Entity).ValueRW.m_Geometry.m_Left = _MoveSegment(gnEndNodeGeometry.GetRefRO(m_Entity).ValueRO.m_Geometry.m_Left, delta);
                     gnEndNodeGeometry.GetRefRW(m_Entity).ValueRW.m_Geometry.m_Right = _MoveSegment(gnEndNodeGeometry.GetRefRO(m_Entity).ValueRO.m_Geometry.m_Right, delta);
                 }
 
                 if (gnStartNodeGeometry.HasComponent(m_Entity))
                 {
-                    //sb.Append($"gnStartNodeGeometry, ");
+                    sb.Append($"gnStartNodeGeometry, ");
                     gnStartNodeGeometry.GetRefRW(m_Entity).ValueRW.m_Geometry.m_Left = _MoveSegment(gnStartNodeGeometry.GetRefRO(m_Entity).ValueRO.m_Geometry.m_Left, delta);
                     gnStartNodeGeometry.GetRefRW(m_Entity).ValueRW.m_Geometry.m_Right = _MoveSegment(gnStartNodeGeometry.GetRefRO(m_Entity).ValueRO.m_Geometry.m_Right, delta);
                 }
 
                 if (goTransform.HasComponent(m_Entity))
                 {
-                    //sb.Append($"goTransform, ");
+                    sb.Append($"goTransform, ");
                     goTransform.GetRefRW(m_Entity).ValueRW.m_Position = value;
-                    if (grCullingInfo.HasComponent(m_Entity))
-                    {
-                        //sb.Append($"grCullingInfo, ");
-                        grCullingInfo.GetRefRW(m_Entity).ValueRW.m_Bounds = _MoveBounds3(grCullingInfo.GetRefRO(m_Entity).ValueRO.m_Bounds, delta);
-                    }
+                }
+
+                if (grCullingInfo.HasComponent(m_Entity))
+                {
+                    sb.Append($"grCullingInfo, ");
+                    grCullingInfo.GetRefRW(m_Entity).ValueRW.m_Bounds = _MoveBounds3(grCullingInfo.GetRefRO(m_Entity).ValueRO.m_Bounds, delta);
                 }
 
                 if (gpObjectGeometryData.HasComponent(m_Entity))
                 {
-                    //sb.Append($"gpObjectGeometryData, ");
+                    sb.Append($"gpObjectGeometryData, ");
                     gpObjectGeometryData.GetRefRW(m_Entity).ValueRW.m_Pivot = value;
                 }
+
                 //QLog.Debug(sb.ToString());
             }
         }
