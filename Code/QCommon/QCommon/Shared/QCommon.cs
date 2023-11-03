@@ -18,17 +18,7 @@ namespace QCommonLib
 
         public static long ElapsedMilliseconds(long startTime)
         {
-            long endTime = Stopwatch.GetTimestamp();
-            long elapsed;
-
-            if (endTime > startTime)
-            {
-                elapsed = endTime - startTime;
-            }
-            else
-            {
-                elapsed = startTime - endTime;
-            }
+            long elapsed = math.abs(Stopwatch.GetTimestamp() - startTime);
 
             return elapsed / (Stopwatch.Frequency / 1000);
         }
@@ -39,10 +29,7 @@ namespace QCommonLib
         {
             get
             {
-                if (_toolSystem == null)
-                {
-                    _toolSystem = World.DefaultGameObjectInjectionWorld.GetExistingSystemManaged<ToolSystem>();
-                }
+                _toolSystem ??= World.DefaultGameObjectInjectionWorld.GetExistingSystemManaged<ToolSystem>();
                 return _toolSystem;
             }
         }
@@ -52,10 +39,7 @@ namespace QCommonLib
         {
             get
             {
-                if (_defaultTool == null)
-                {
-                    _defaultTool = World.DefaultGameObjectInjectionWorld.GetExistingSystemManaged<DefaultToolSystem>();
-                }
+                _defaultTool ??= World.DefaultGameObjectInjectionWorld.GetExistingSystemManaged<DefaultToolSystem>();
                 return _defaultTool;
             }
         }
@@ -65,10 +49,7 @@ namespace QCommonLib
         {
             get
             {
-                if (_prefabSystem == null)
-                {
-                    _prefabSystem = World.DefaultGameObjectInjectionWorld.GetExistingSystemManaged<PrefabSystem>();
-                }
+                _prefabSystem ??= World.DefaultGameObjectInjectionWorld.GetExistingSystemManaged<PrefabSystem>();
                 return _prefabSystem;
             }
         }

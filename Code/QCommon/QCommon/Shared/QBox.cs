@@ -69,22 +69,40 @@ namespace QCommonLib
         /// For example for Game.Areas.SubArea.m_area, it returns m_area
         /// </summary>
         /// <param name="type">The IBufferElementData struct type to search</param>
+        /// <param name="index">How many entity fields to skip over</param>
         /// <returns>FieldInfo of this field</returns>
         /// <exception cref="Exception">If no such field is found</exception>
-        public static FieldInfo GetEntityReferenceField(Type type)
+        public static FieldInfo GetEntityReferenceField(Type type, int index = 0)
         {
+            int c = 0;
             FieldInfo field = null;
             foreach (FieldInfo f in type.GetFields())
             {
                 if (f.FieldType == typeof(Entity))
                 {
-                    field = f;
-                    break;
+                    if (c == index)
+                    {
+                        field = f;
+                        break;
+                    }
+                    else
+                    {
+                        c++;
+                    }
                 }
             }
             if (field == null) throw new Exception($"Entity field not found for type {type}");
-
             return field;
+        }
+
+        public static List<FieldInfo> GetEntityReferenceFields(Type type, int count)
+        {
+            List<FieldInfo> result = new();
+            for (int i = 0; i < count; i++)
+            {
+                result.Add(GetEntityReferenceField(type, i));
+            }
+            return result;
         }
 
         #region Component Has/Get/Set

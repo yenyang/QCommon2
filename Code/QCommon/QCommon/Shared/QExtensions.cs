@@ -62,7 +62,7 @@ namespace QCommonLib
             return true;
         }
 
-        public static string Debug(this float3 f)
+        public static string D(this float3 f)
         {
             return $"{f.x},{f.z}";
             //return $"{f.x},{f.y},{f.z}";

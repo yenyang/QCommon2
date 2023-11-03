@@ -37,8 +37,9 @@ namespace QCommonLib
 
         public Entity m_Entity;
         internal float3 m_ParentPosition;
+        internal bool m_TopLevel;
 
-        internal QEntityAccessor(BufferLookup<Game.Areas.Node> gaNode, ComponentLookup<Game.Areas.Geometry> gaGeometry, ComponentLookup<Game.Common.Updated> gcUpdated, ComponentLookup<Game.Net.Curve> gnCurve, ComponentLookup<Game.Net.EdgeGeometry> gnEdgeGeometry, ComponentLookup<Game.Net.EndNodeGeometry> gnEndNodeGeometry, ComponentLookup<Game.Net.Node> gnNode, ComponentLookup<Game.Net.NodeGeometry> gnNodeGeometry, ComponentLookup<Game.Net.StartNodeGeometry> gnStartNodeGeometry, ComponentLookup<Game.Objects.Transform> goTransform, ComponentLookup<Game.Prefabs.ObjectGeometryData> gpObjectGeometryData, ComponentLookup<Game.Rendering.CullingInfo> grCullingInfo, Entity e, float3 parentPosition)
+        internal QEntityAccessor(BufferLookup<Game.Areas.Node> gaNode, ComponentLookup<Game.Areas.Geometry> gaGeometry, ComponentLookup<Game.Common.Updated> gcUpdated, ComponentLookup<Game.Net.Curve> gnCurve, ComponentLookup<Game.Net.EdgeGeometry> gnEdgeGeometry, ComponentLookup<Game.Net.EndNodeGeometry> gnEndNodeGeometry, ComponentLookup<Game.Net.Node> gnNode, ComponentLookup<Game.Net.NodeGeometry> gnNodeGeometry, ComponentLookup<Game.Net.StartNodeGeometry> gnStartNodeGeometry, ComponentLookup<Game.Objects.Transform> goTransform, ComponentLookup<Game.Prefabs.ObjectGeometryData> gpObjectGeometryData, ComponentLookup<Game.Rendering.CullingInfo> grCullingInfo, Entity e)
         {
             this.gaNode = gaNode;
             this.gaGeometry = gaGeometry;
@@ -56,7 +57,8 @@ namespace QCommonLib
             m_hasRotationRead = m_hasRotationWrite = false;
             this.m_Entity = e;
 
-            m_ParentPosition = parentPosition;
+            m_ParentPosition = QCommon.Float3Invalid();
+            m_TopLevel = false;
 
             m_hasPositionsRead = m_hasPositionsWrite = false;
             m_hasRotationsRead = m_hasRotationsWrite = false;
@@ -71,7 +73,7 @@ namespace QCommonLib
             }
             else
             {
-                if (goTransform.HasComponent(e))
+                if (goTransform.HasComponent(e) || gnNode.HasComponent(e))
                 {
                     m_hasPositionRead = true;
                     m_hasPositionWrite = true;
@@ -85,11 +87,6 @@ namespace QCommonLib
                     m_hasPositionWrite = true;
                 }
                 if (gnEdgeGeometry.HasComponent(e) || gnEndNodeGeometry.HasComponent(e) || gnNodeGeometry.HasComponent(e) || gnStartNodeGeometry.HasComponent(e))
-                {
-                    m_hasPositionRead = true;
-                    m_hasPositionWrite = true;
-                }
-                if (gnNode.HasComponent(e))
                 {
                     m_hasPositionRead = true;
                     m_hasPositionWrite = true;
@@ -266,7 +263,7 @@ namespace QCommonLib
 
                 float3 delta = value - Position;
 
-                StringBuilder sb = new($"Pos.Set {m_Entity.D()} (value:{value.Debug()}, delta:{delta.Debug()}, oldPos:{Position.Debug()}): ");
+                StringBuilder sb = new($"Pos.Set {m_Entity.D()} (value:{value.D()}, delta:{delta.D()}, oldPos:{Position.D()}): ");
 
                 if (gaGeometry.HasComponent(m_Entity))
                 {
@@ -304,15 +301,13 @@ namespace QCommonLib
                 if (gnEndNodeGeometry.HasComponent(m_Entity))
                 {
                     sb.Append($"gnEndNodeGeometry, ");
-                    gnEndNodeGeometry.GetRefRW(m_Entity).ValueRW.m_Geometry.m_Left = _MoveSegment(gnEndNodeGeometry.GetRefRO(m_Entity).ValueRO.m_Geometry.m_Left, delta);
-                    gnEndNodeGeometry.GetRefRW(m_Entity).ValueRW.m_Geometry.m_Right = _MoveSegment(gnEndNodeGeometry.GetRefRO(m_Entity).ValueRO.m_Geometry.m_Right, delta);
+                    gnEndNodeGeometry.GetRefRW(m_Entity).ValueRW.m_Geometry = _MoveEdgeNodeGeometry(gnEndNodeGeometry.GetRefRO(m_Entity).ValueRO.m_Geometry, delta);
                 }
 
                 if (gnStartNodeGeometry.HasComponent(m_Entity))
                 {
                     sb.Append($"gnStartNodeGeometry, ");
-                    gnStartNodeGeometry.GetRefRW(m_Entity).ValueRW.m_Geometry.m_Left = _MoveSegment(gnStartNodeGeometry.GetRefRO(m_Entity).ValueRO.m_Geometry.m_Left, delta);
-                    gnStartNodeGeometry.GetRefRW(m_Entity).ValueRW.m_Geometry.m_Right = _MoveSegment(gnStartNodeGeometry.GetRefRO(m_Entity).ValueRO.m_Geometry.m_Right, delta);
+                    gnStartNodeGeometry.GetRefRW(m_Entity).ValueRW.m_Geometry = _MoveEdgeNodeGeometry(gnStartNodeGeometry.GetRefRO(m_Entity).ValueRO.m_Geometry, delta);
                 }
 
                 if (goTransform.HasComponent(m_Entity))
@@ -416,17 +411,19 @@ namespace QCommonLib
             }
         }
 
-        private readonly Bounds3 _MoveBounds3(Bounds3 input, float3 delta)
-        {
-            input.min += delta;
-            input.max += delta;
-            return input;
-        }
-
         private readonly Game.Net.Segment _MoveSegment(Game.Net.Segment input, float3 delta)
         {
             input.m_Left = _MoveBezier4x3(input.m_Left, delta);
             input.m_Right = _MoveBezier4x3(input.m_Right, delta);
+            return input;
+        }
+
+        private readonly Game.Net.EdgeNodeGeometry _MoveEdgeNodeGeometry(Game.Net.EdgeNodeGeometry input, float3 delta)
+        {
+            input.m_Left = _MoveSegment(input.m_Left, delta);
+            input.m_Right = _MoveSegment(input.m_Right, delta);
+            input.m_Middle = _MoveBezier4x3(input.m_Middle, delta);
+            input.m_Bounds = _MoveBounds3(input.m_Bounds, delta);
             return input;
         }
 
@@ -438,5 +435,13 @@ namespace QCommonLib
             input.d += delta;
             return input;
         }
+        
+        private readonly Bounds3 _MoveBounds3(Bounds3 input, float3 delta)
+        {
+            input.min += delta;
+            input.max += delta;
+            return input;
+        }
+
     }
 }
