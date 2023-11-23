@@ -68,6 +68,11 @@ namespace QCommonLib
             //return $"{f.x},{f.y},{f.z}";
         }
 
+        public static string DX(this float3 f)
+        {
+            return $"{f.x},{f.y},{f.z}";
+        }
+
         public static void Deconstruct<T1, T2>(this KeyValuePair<T1, T2> tuple, out T1 key, out T2 value)
         {
             key = tuple.Key;
