@@ -3,9 +3,7 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 using UnityEngine;
 
 namespace QCommonLib
@@ -94,6 +92,9 @@ namespace QCommonLib
             Error,
         }
 
+        private string _IntroMessage = string.Empty;
+        private bool _HasLogged = false;
+
         /// <summary>
         /// Create QDebug instance
         /// </summary>
@@ -109,29 +110,23 @@ namespace QCommonLib
             }
 
             AssemblyName details = AssemblyObject.GetName();
-            Info($"{details.Name} v{details.Version} at " + DateTime.UtcNow.ToString(new CultureInfo("en-GB")) + $" ({m_TimezoneOffset})");
+            _IntroMessage = $"{details.Name} v{details.Version} at " + DateTime.UtcNow.ToString(new CultureInfo("en-GB")) + $" ({m_TimezoneOffset})";
         }
 
         ~QLoggerCustom()
         {
-            Info($"{AssemblyName} closing (" + DateTime.UtcNow.ToString(new CultureInfo("en-GB")) + $" ({m_TimezoneOffset})");
+            if (_HasLogged) Info($"{AssemblyName} closing (" + DateTime.UtcNow.ToString(new CultureInfo("en-GB")) + $" ({m_TimezoneOffset})");
         }
 
         #region Debug
         public override void Debug(string message, string code = "")
         {
-            if (IsDebug)
-            {
-                Do(message, LogLevel.Debug, code);
-            }
+            Do(message, LogLevel.Debug, code);
         }
 
         public override void Debug(Exception exception, string code = "")
         {
-            if (IsDebug)
-            {
-                Do(exception.ToString(), LogLevel.Debug, code);
-            }
+            Do(exception.ToString(), LogLevel.Debug, code);
         }
         #endregion
 
@@ -175,20 +170,36 @@ namespace QCommonLib
 
         private void Do(string message, LogLevel logLevel, string code)
         {
+            if (!IsDebug && logLevel == LogLevel.Debug)
+            {
+                return;
+            }
+            _HasLogged = true;
+            if (_IntroMessage != string.Empty)
+            {
+                DoImpl(_IntroMessage, LogLevel.Info, string.Empty);
+                _IntroMessage = string.Empty;
+            }
+            DoImpl(message, logLevel, code);
+        }
+
+        private void DoImpl(string message, LogLevel logLevel, string code)
+        {
             try
             {
                 lock (LogFile)
                 {
                     var ticks = Timer.ElapsedTicks;
-                    string msg = "";
-                    if (code != "") code += " ";
+                    string msg = string.Empty;
+                    if (code != string.Empty) code += " ";
 
-                    int maxLen = Enum.GetNames(typeof(LogLevel)).Select(str => str.Length).Max();
-                    msg += string.Format($"{{0, -{maxLen}}}", $"[{logLevel}] ");
 
                     long secs = ticks / Stopwatch.Frequency;
                     long fraction = ticks % Stopwatch.Frequency;
-                    msg += string.Format($"{secs:n0}.{fraction:D7} | {code}{message}{NL}");
+                    string levelStr = $"[{logLevel}] ";
+                    string fracStr = fraction.ToString();
+                    string timeStr = $"{secs:n0}.{fracStr.Substring(0, Math.Min(fracStr.Length, 3))}";
+                    msg += $"{levelStr,-8}{timeStr, 8} | {code}{message}{NL}";
 
                     using StreamWriter w = File.AppendText(LogFile);
                     w.Write(msg);
@@ -212,7 +223,7 @@ namespace QCommonLib
         public QLoggerCO(bool isDebug = true, string filename = "", bool mirrorToStatic = true) : base(isDebug)
         {
             _mirrorToStatic = mirrorToStatic;
-            Logger = LogManager.GetLogger(filename == "" ? AssemblyName : filename);
+            Logger = LogManager.GetLogger(filename == string.Empty ? AssemblyName : filename);
 
             AssemblyName details = AssemblyObject.GetName();
             Logger.Info($"{details.Name} v{details.Version} at " + DateTime.UtcNow.ToString(new CultureInfo("en-GB")) + $" ({m_TimezoneOffset})");
@@ -229,7 +240,7 @@ namespace QCommonLib
             if (IsDebug)
             { 
                 if (_mirrorToStatic) QLog.Debug(message, code);
-                if (code != "") code += " ";
+                if (code != string.Empty) code += " ";
                 Logger.Debug(code + message);
             }
         }
@@ -248,7 +259,7 @@ namespace QCommonLib
         public override void Info(string message, string code = "")
         {
             if (_mirrorToStatic) QLog.Info(message, code);
-            if (code != "") code += " ";
+            if (code != string.Empty) code += " ";
             Logger.Info(code + message);
         }
 
@@ -263,7 +274,7 @@ namespace QCommonLib
         public override void Warning(string message, string code = "")
         {
             if (_mirrorToStatic) QLog.Warning(message, code);
-            if (code != "") code += " ";
+            if (code != string.Empty) code += " ";
             Logger.Warn(code + message);
         }
 
@@ -278,16 +289,16 @@ namespace QCommonLib
         public override void Error(string message, string code = "")
         {
             if (_mirrorToStatic) QLog.Error(message, code);
-            if (code != "") code += " ";
+            if (code != string.Empty) code += " ";
             Logger.Error(code + message + NL + new StackTrace().ToString() + NL);
         }
 
         public override void Error(Exception exception, string code = "")
         {
             if (_mirrorToStatic) QLog.Error(exception, code);
-            if (code != "") code += " ";
+            if (code != string.Empty) code += " ";
             string message = exception.ToString();
-            if (exception.StackTrace is null || exception.StackTrace == "") message += NL + new StackTrace().ToString();
+            if (exception.StackTrace is null || exception.StackTrace == string.Empty) message += NL + new StackTrace().ToString();
             Logger.Error(code + message + NL);
         }
         #endregion
@@ -313,7 +324,7 @@ namespace QCommonLib
         /// </summary>
         public bool IsDebug { get; set; }
 
-        public QLoggerBase(bool isDebug = true)
+        public QLoggerBase(bool isDebug = false)
         {
             AssemblyObject = Assembly.GetCallingAssembly() ?? throw new ArgumentNullException("QLogger: Failed to find calling assembly");
             m_TimezoneOffset = GetTimezoneOffset();

@@ -80,6 +80,37 @@ namespace QCommonLib
         }
 
 
+        public static float X(this Game.Objects.Transform transform)
+        {
+            return transform.m_Rotation.ToEulerDegrees().x;
+        }
+
+        public static float Y(this Game.Objects.Transform transform)
+        {
+            return transform.m_Rotation.ToEulerDegrees().y;
+        }
+
+        public static float Z(this Game.Objects.Transform transform)
+        {
+            return transform.m_Rotation.ToEulerDegrees().z;
+        }
+
+
+        public static float X(this quaternion quat)
+        {
+            return quat.ToEulerDegrees().x;
+        }
+
+        public static float Y(this quaternion quat)
+        {
+            return quat.ToEulerDegrees().y;
+        }
+
+        public static float Z(this quaternion quat)
+        {
+            return quat.ToEulerDegrees().z;
+        }
+
         public static float3 ToEulerDegrees(this quaternion quat)
         {
             float4 q1 = quat.value;
@@ -225,69 +256,69 @@ namespace QCommonLib
         //    return null;
         //}
 
-        public static bool IsNumericType(this object o)
-        {
-            switch (Type.GetTypeCode(o.GetType()))
-            {
-                case TypeCode.Byte:
-                case TypeCode.SByte:
-                case TypeCode.UInt16:
-                case TypeCode.UInt32:
-                case TypeCode.UInt64:
-                case TypeCode.Int16:
-                case TypeCode.Int32:
-                case TypeCode.Int64:
-                case TypeCode.Decimal:
-                case TypeCode.Double:
-                case TypeCode.Single:
-                    return true;
-                default:
-                    return false;
-            }
-        }
+        //public static bool IsNumericType(this object o)
+        //{
+        //    switch (Type.GetTypeCode(o.GetType()))
+        //    {
+        //        case TypeCode.Byte:
+        //        case TypeCode.SByte:
+        //        case TypeCode.UInt16:
+        //        case TypeCode.UInt32:
+        //        case TypeCode.UInt64:
+        //        case TypeCode.Int16:
+        //        case TypeCode.Int32:
+        //        case TypeCode.Int64:
+        //        case TypeCode.Decimal:
+        //        case TypeCode.Double:
+        //        case TypeCode.Single:
+        //            return true;
+        //        default:
+        //            return false;
+        //    }
+        //}
 
-        public static bool IsNumericType(this Type type)
-        {
-            if (type.Namespace == "Unity.Mathematics")
-            {
-                return true;
-            }
+        //public static bool IsNumericType(this Type type)
+        //{
+        //    if (type.Namespace == "Unity.Mathematics")
+        //    {
+        //        return true;
+        //    }
 
-            switch (Type.GetTypeCode(type))
-            {
-                case TypeCode.Byte:
-                case TypeCode.SByte:
-                case TypeCode.UInt16:
-                case TypeCode.UInt32:
-                case TypeCode.UInt64:
-                case TypeCode.Int16:
-                case TypeCode.Int32:
-                case TypeCode.Int64:
-                case TypeCode.Decimal:
-                case TypeCode.Double:
-                case TypeCode.Single:
-                    return true;
-                default:
-                    return false;
-            }
-        }
+        //    switch (Type.GetTypeCode(type))
+        //    {
+        //        case TypeCode.Byte:
+        //        case TypeCode.SByte:
+        //        case TypeCode.UInt16:
+        //        case TypeCode.UInt32:
+        //        case TypeCode.UInt64:
+        //        case TypeCode.Int16:
+        //        case TypeCode.Int32:
+        //        case TypeCode.Int64:
+        //        case TypeCode.Decimal:
+        //        case TypeCode.Double:
+        //        case TypeCode.Single:
+        //            return true;
+        //        default:
+        //            return false;
+        //    }
+        //}
 
-        public static bool IsEnumerable(object myProperty)
-        {
-            return typeof(IEnumerable).IsInstanceOfType(myProperty)
-                || typeof(IEnumerable<>).IsInstanceOfType(myProperty);
-        }
+        //public static bool IsEnumerable(object myProperty)
+        //{
+        //    return typeof(IEnumerable).IsInstanceOfType(myProperty)
+        //        || typeof(IEnumerable<>).IsInstanceOfType(myProperty);
+        //}
 
-        public static bool IsCollection(Type type)
-        {
-            return typeof(ICollection).IsAssignableFrom(type)
-                || typeof(ICollection<>).IsAssignableFrom(type);
-        }
+        //public static bool IsCollection(Type type)
+        //{
+        //    return typeof(ICollection).IsAssignableFrom(type)
+        //        || typeof(ICollection<>).IsAssignableFrom(type);
+        //}
 
-        public static bool IsList(Type type)
-        {
-            return typeof(IList).IsAssignableFrom(type)
-                || typeof(IList<>).IsAssignableFrom(type);
-        }
+        //public static bool IsList(Type type)
+        //{
+        //    return typeof(IList).IsAssignableFrom(type)
+        //        || typeof(IList<>).IsAssignableFrom(type);
+        //}
     }
 }
