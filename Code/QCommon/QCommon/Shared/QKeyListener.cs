@@ -11,10 +11,10 @@ namespace QCommonLib
 
         internal KeyCode m_Code;
         internal EventModifiers m_Modifiers;
-        internal QKeyListerContexts m_Context;
+        internal QKeyListenerContexts m_Context;
         public ToolBaseSystem m_Tool = null;
 
-        internal QKeyEventReaction(KeyCode code, EventModifiers modifiers, QKeyListerContexts context, ToolBaseSystem tool)
+        internal QKeyEventReaction(KeyCode code, EventModifiers modifiers, QKeyListenerContexts context, ToolBaseSystem tool)
         {
             m_Code = code;
             m_Modifiers = modifiers;
@@ -42,11 +42,11 @@ namespace QCommonLib
 
             if (m_Tool != null)
             {
-                if (m_Context == QKeyListerContexts.Default && QCommon.ActiveTool != QCommon.DefaultTool)
+                if (m_Context == QKeyListenerContexts.Default && QCommon.ActiveTool != QCommon.DefaultTool)
                 {
                     return false;
                 }
-                if (m_Context == QKeyListerContexts.InTool && QCommon.ActiveTool != m_Tool)
+                if (m_Context == QKeyListenerContexts.InTool && QCommon.ActiveTool != m_Tool)
                 {
                     return false;
                 }
@@ -64,7 +64,6 @@ namespace QCommonLib
 
             if (Time.time - _timeLastClicked > _clickDelay)
             {
-                //QLoggerStatic.Debug($"Detected {this}");
                 _timeLastClicked = Time.time;
                 return true;
             }
@@ -77,13 +76,13 @@ namespace QCommonLib
     {
         internal QKeyListener.Trigger m_trigger;
 
-        internal QKeyEventAction(KeyCode code, EventModifiers modifiers, QKeyListerContexts context, ToolBaseSystem tool, QKeyListener.Trigger trigger) : base(code, modifiers, context, tool)
+        internal QKeyEventAction(KeyCode code, EventModifiers modifiers, QKeyListenerContexts context, ToolBaseSystem tool, QKeyListener.Trigger trigger) : base(code, modifiers, context, tool)
         {
             m_trigger = trigger;
         }
     }
 
-    internal enum QKeyListerContexts
+    internal enum QKeyListenerContexts
     {
         Default,
         InTool
@@ -98,7 +97,7 @@ namespace QCommonLib
         public delegate void Trigger();
         public ToolBaseSystem m_tool = null;
 
-        internal void RegisterKeyAction(KeyCode code, EventModifiers modifiers, QKeyListerContexts context, Trigger trigger)
+        internal void RegisterKeyAction(KeyCode code, EventModifiers modifiers, QKeyListenerContexts context, Trigger trigger)
         {
             RegisterKeyAction(new QKeyEventAction(code, modifiers, context, m_tool, trigger));
         }
