@@ -62,15 +62,19 @@ namespace QCommonLib
             return true;
         }
 
+        public static string D(this Game.Objects.Transform t)
+        {
+            return $"{t.m_Position.DX()}/{t.m_Rotation.Y():0.##}";
+        }
+
         public static string D(this float3 f)
         {
-            return $"{f.x},{f.z}";
-            //return $"{f.x},{f.y},{f.z}";
+            return $"{f.x:0.##},{f.z:0.##}";
         }
 
         public static string DX(this float3 f)
         {
-            return $"{f.x},{f.y},{f.z}";
+            return $"{f.x:0.##},{f.y:0.##},{f.z:0.##}";
         }
 
         public static void Deconstruct<T1, T2>(this KeyValuePair<T1, T2> tuple, out T1 key, out T2 value)
