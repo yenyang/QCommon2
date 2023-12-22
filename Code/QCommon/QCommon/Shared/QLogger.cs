@@ -1,5 +1,6 @@
 ﻿using Colossal.Logging;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -28,6 +29,16 @@ namespace QCommonLib
         {
             get => s_Instance.IsDebug;
             set => s_Instance.IsDebug = value;
+        }
+
+        public static void Bundle(string key, string message)
+        {
+            s_Instance?.Bundle(key, message);
+        }
+
+        public static void FlushBundle()
+        {
+            s_Instance?.FlushBundles();
         }
 
         public static void Debug(string message, string code = "")
@@ -103,6 +114,7 @@ namespace QCommonLib
         {
             Timer = Stopwatch.StartNew();
             LogFile = Path.Combine(Path.GetDirectoryName(Application.consoleLogPath), "Logs", AssemblyName + "_debug.log");
+            _BundledMsgs = new();
 
             if (File.Exists(LogFile))
             {
@@ -323,6 +335,10 @@ namespace QCommonLib
         /// Should debug messages be logged?
         /// </summary>
         public bool IsDebug { get; set; }
+        /// <summary>
+        /// Storage for bundled messages
+        /// </summary>
+        protected Dictionary<string, (string Message, int Count)> _BundledMsgs;
 
         public QLoggerBase(bool isDebug = false)
         {
@@ -339,6 +355,46 @@ namespace QCommonLib
         public abstract void Warning(Exception exception, string code = "");
         public abstract void Error(string message, string code = "");
         public abstract void Error(Exception exception, string code = "");
+
+        #region Bundled messages
+        public void Bundle(string key, string msg)
+        {
+            if (!_BundledMsgs.ContainsKey(key))
+            {
+                _BundledMsgs.Add(key, ("", 0));
+            }
+
+            (string prevMsg, int count) = _BundledMsgs[key];
+            if (prevMsg.Equals(msg))
+            {
+                count++;
+            }
+            else
+            {
+                if (count > 1)
+                {
+                    Debug($"*{key}* Repeated {count} times: \"{prevMsg}\"");
+                }
+                Debug($"*{key}* {msg}");
+                prevMsg = msg;
+                count = 1;
+            }
+
+            _BundledMsgs[key] = (prevMsg, count);
+        }
+
+        public void FlushBundles()
+        {
+            foreach ((string key, (string prevMsg, int count)) in _BundledMsgs)
+            {
+                if (count > 1)
+                {
+                    Debug($"*{key}* Repeated {count} times: \"{prevMsg}\"");
+                }
+            }
+            _BundledMsgs.Clear();
+        }
+        #endregion
 
         public static string GetTimezoneOffset()
         {
