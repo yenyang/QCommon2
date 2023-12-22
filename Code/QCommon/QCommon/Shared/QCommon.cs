@@ -9,12 +9,12 @@ namespace QCommonLib
 {
     public class QCommon
     {
-        public static float3 Float3Invalid()
-        {
-            float3 f = new();
-            f.SetInvalid();
-            return f;
-        }
+        //public static float3 Float3Invalid()
+        //{
+        //    float3 f = new();
+        //    f.SetInvalid();
+        //    return f;
+        //}
 
         public static long ElapsedMilliseconds(long startTime)
         {

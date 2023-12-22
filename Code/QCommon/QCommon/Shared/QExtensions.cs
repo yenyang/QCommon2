@@ -49,18 +49,18 @@ namespace QCommonLib
             return new float3(x, y, z);
         }
 
-        public static void SetInvalid(this float3 f)
-        {
-            f.x = -9999.69f;
-            f.y = -9999.69f;
-            f.z = -9999.69f;
-        }
+        //public static void SetInvalid(this float3 f)
+        //{
+        //    f.x = -9999.69f;
+        //    f.y = -9999.69f;
+        //    f.z = -9999.69f;
+        //}
 
-        public static bool IsValid(this float3 f)
-        {
-            if (f.x == -9999.69f && f.y == -9999.69f && f.z == -9999.69f) return false;
-            return true;
-        }
+        //public static bool IsValid(this float3 f)
+        //{
+        //    if (f.x == -9999.69f && f.y == -9999.69f && f.z == -9999.69f) return false;
+        //    return true;
+        //}
 
         public static string D(this Game.Objects.Transform t)
         {

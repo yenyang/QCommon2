@@ -10,6 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)QCommon.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)QEntityAccessor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QKeyboard.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QKeyListener.cs" />
