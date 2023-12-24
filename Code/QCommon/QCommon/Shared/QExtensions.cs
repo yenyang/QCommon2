@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -23,6 +24,23 @@ namespace QCommonLib
             return new string(input.ToCharArray()
                 .Where(c => !Char.IsWhiteSpace(c))
                 .ToArray());
+        }
+
+        public static quaternion Multiply(this quaternion a, quaternion b)
+        {
+            return math.normalize(math.mul(a, b));
+        }
+
+        public static quaternion Inverse(this quaternion q)
+        {
+            float num = q.value.x * q.value.x + q.value.y * q.value.y + q.value.z * q.value.z + q.value.w * q.value.w;
+            float num2 = 1f / num;
+            quaternion result = default;
+            result.value.x = (0f - q.value.x) * num2;
+            result.value.y = (0f - q.value.y) * num2;
+            result.value.z = (0f - q.value.z) * num2;
+            result.value.w = q.value.w * num2;
+            return result;
         }
 
         public static string D(this Entity e)
