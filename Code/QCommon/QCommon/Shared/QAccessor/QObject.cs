@@ -3,7 +3,6 @@ using System;
 using Unity.Collections;
 using Unity.Entities;
 using System.Reflection;
-using System.Collections;
 using System.Text;
 using Unity.Mathematics;
 using UnityEngine;
@@ -24,7 +23,7 @@ namespace QCommonLib.QAccessor
 
     public struct QObject : IDisposable
     {
-        internal readonly EntityManager EntityManager => World.DefaultGameObjectInjectionWorld.EntityManager;
+        internal readonly EntityManager EM => World.DefaultGameObjectInjectionWorld.EntityManager;
 
         public Entity m_Entity;
         public QEntity m_Accessor;
@@ -128,7 +127,10 @@ namespace QCommonLib.QAccessor
 
             for (int i = 0; i < m_Children.Length; i++)
             {
-                sb.Append("\n    " + m_Children[i].m_Entity.D() + ": \"" + QCommon.GetPrefabName(EntityManager, m_Children[i].m_Entity) + "\"");
+                sb.AppendFormat("\n    {0}: \"{1}\"",
+                    m_Children[i].m_Entity.D(), 
+                    QCommon.GetPrefabName(EM, m_Children[i].m_Entity)
+                );
             }
 
             QLog.Debug(sb.ToString());
@@ -151,9 +153,9 @@ namespace QCommonLib.QAccessor
 
             foreach (QReferenceBufferType type in _ReferenceBufferTypes)
             {
-                if (HasBufferByType(type.tParentComponent, e))
+                if (QByType.HasBuffer(type.tParentComponent, e))
                 {
-                    GetRefBufferComponentsByType(type.tParentComponent, e, out List<IBufferElementData> buffer, true);
+                    QByType.GetRefBufferComponents(type.tParentComponent, e, out List<IBufferElementData> buffer, true);
                     foreach (IBufferElementData element in buffer)
                     {
                         Entity sub = (Entity)type.m_FieldInfo.GetValue(element);
@@ -204,33 +206,6 @@ namespace QCommonLib.QAccessor
             }
             if (field == null) throw new Exception($"Entity field not found for type {type}");
             return field;
-        }
-
-        public readonly bool HasBufferByType(Type type, Entity e)
-        {
-            MethodInfo hasBuffer = typeof(EntityManager).GetMethod(nameof(EntityManager.HasBuffer), new Type[] { typeof(Entity) });
-            MethodInfo generic = hasBuffer.MakeGenericMethod(type);
-            return (bool)generic.Invoke(EntityManager, new object[] { e });
-        }
-
-        public readonly void GetRefBufferComponentsByType(Type type, Entity e, out List<IBufferElementData> components, bool isReadOnly = true)
-        {
-            GetRefBufferComponentsAsDynBuffer(type, e, out object rawDynamicBuffer, isReadOnly);
-            IEnumerable data = (IEnumerable)rawDynamicBuffer.GetType().GetMethod("AsNativeArray", BindingFlags.Instance | BindingFlags.Public).Invoke(rawDynamicBuffer, null);
-            components = new List<IBufferElementData>();
-            foreach (object o in data)
-            {
-                components.Add((IBufferElementData)o);
-            }
-            IDisposable disposable = data as IDisposable;
-            disposable.Dispose();
-        }
-
-        public readonly void GetRefBufferComponentsAsDynBuffer(Type type, Entity e, out object bufferValue, bool isReadOnly = true)
-        {
-            MethodInfo method = typeof(EntityManager).GetMethod(nameof(EntityManager.GetBuffer), new Type[] { typeof(Entity), typeof(bool) });
-            MethodInfo generic = method.MakeGenericMethod(type);
-            bufferValue = generic.Invoke(EntityManager, new object[] { e, isReadOnly });
         }
         #endregion
     }

@@ -230,11 +230,11 @@ namespace QCommonLib
         /// The ColossalOrder ILog instance
         /// </summary>
         internal ILog Logger { get; set; }
-        private readonly bool _mirrorToStatic;
+        private readonly bool _MirrorToStatic;
 
         public QLoggerCO(bool isDebug = true, string filename = "", bool mirrorToStatic = true) : base(isDebug)
         {
-            _mirrorToStatic = mirrorToStatic;
+            _MirrorToStatic = mirrorToStatic;
             Logger = LogManager.GetLogger(filename == string.Empty ? AssemblyName : filename);
 
             AssemblyName details = AssemblyObject.GetName();
@@ -251,7 +251,7 @@ namespace QCommonLib
         {
             if (IsDebug)
             { 
-                if (_mirrorToStatic) QLog.Debug(message, code);
+                if (_MirrorToStatic) QLog.Debug(message, code);
                 if (code != string.Empty) code += " ";
                 Logger.Debug(code + message);
             }
@@ -261,7 +261,7 @@ namespace QCommonLib
         {
             if (IsDebug)
             {
-                if (_mirrorToStatic) QLog.Debug(exception, code);
+                if (_MirrorToStatic) QLog.Debug(exception, code);
                 Logger.Debug(exception, code);
             }
         }
@@ -270,14 +270,14 @@ namespace QCommonLib
         #region Info
         public override void Info(string message, string code = "")
         {
-            if (_mirrorToStatic) QLog.Info(message, code);
+            if (_MirrorToStatic) QLog.Info(message, code);
             if (code != string.Empty) code += " ";
             Logger.Info(code + message);
         }
 
         public override void Info(Exception exception, string code = "")
         {
-            if (_mirrorToStatic) QLog.Info(exception, code);
+            if (_MirrorToStatic) QLog.Info(exception, code);
             Logger.Info(exception, code);
         }
         #endregion
@@ -285,14 +285,14 @@ namespace QCommonLib
         #region Warning
         public override void Warning(string message, string code = "")
         {
-            if (_mirrorToStatic) QLog.Warning(message, code);
+            if (_MirrorToStatic) QLog.Warning(message, code);
             if (code != string.Empty) code += " ";
             Logger.Warn(code + message);
         }
 
         public override void Warning(Exception exception, string code = "")
         {
-            if (_mirrorToStatic) QLog.Warning(exception, code);
+            if (_MirrorToStatic) QLog.Warning(exception, code);
             Logger.Warn(exception, code);
         }
         #endregion
@@ -300,14 +300,14 @@ namespace QCommonLib
         #region Error
         public override void Error(string message, string code = "")
         {
-            if (_mirrorToStatic) QLog.Error(message, code);
+            if (_MirrorToStatic) QLog.Error(message, code);
             if (code != string.Empty) code += " ";
             Logger.Error(code + message + NL + new StackTrace().ToString() + NL);
         }
 
         public override void Error(Exception exception, string code = "")
         {
-            if (_mirrorToStatic) QLog.Error(exception, code);
+            if (_MirrorToStatic) QLog.Error(exception, code);
             if (code != string.Empty) code += " ";
             string message = exception.ToString();
             if (exception.StackTrace is null || exception.StackTrace == string.Empty) message += NL + new StackTrace().ToString();
@@ -371,10 +371,7 @@ namespace QCommonLib
             }
             else
             {
-                if (count > 1)
-                {
-                    Debug($"*{key}* Repeated {count} times: \"{prevMsg}\"");
-                }
+                OutputBundleFooter(key, prevMsg, count);
                 Debug($"*{key}* {msg}");
                 prevMsg = msg;
                 count = 1;
@@ -387,12 +384,17 @@ namespace QCommonLib
         {
             foreach ((string key, (string prevMsg, int count)) in _BundledMsgs)
             {
-                if (count > 1)
-                {
-                    Debug($"*{key}* Repeated {count} times: \"{prevMsg}\"");
-                }
+                OutputBundleFooter(key, prevMsg, count);
             }
             _BundledMsgs.Clear();
+        }
+
+        private void OutputBundleFooter(string key, string prevMsg, int count)
+        {
+            if (count > 1)
+            {
+                Debug($"*{key}* Repeated {count} times{(prevMsg.Length < 30 ? $": \"{prevMsg}\"" : "")}");
+            }
         }
         #endregion
 
