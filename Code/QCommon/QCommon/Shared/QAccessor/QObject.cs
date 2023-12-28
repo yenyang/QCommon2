@@ -31,12 +31,12 @@ namespace QCommonLib.QAccessor
         internal NativeArray<QEntity> m_Children;
         private readonly List<QReferenceBufferType> _ReferenceBufferTypes;
 
-        internal QObject(QLookup lookup, Entity e)
+        internal QObject(Entity e, SystemBase system)
         {
             _ReferenceBufferTypes = new();
-            m_Lookup = lookup;
+            m_Lookup = QLookup.Get(system);
             m_Entity = e;
-            m_Accessor = new(lookup, e);
+            m_Accessor = new(e, system);
             m_Children = new();
 
             _ReferenceBufferTypes = new()
@@ -51,7 +51,7 @@ namespace QCommonLib.QAccessor
             m_Children = new(subEntities.Count, Allocator.Persistent);
             for (int i = 0; i < subEntities.Count; i++)
             {
-                m_Children[i] = new(lookup, subEntities[i]);
+                m_Children[i] = new(subEntities[i], system);
             }
         }
 

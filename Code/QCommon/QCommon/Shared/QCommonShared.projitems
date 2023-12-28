@@ -9,6 +9,7 @@
     <Import_RootNamespace>QCommonLib</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)QAccessor\QLookup.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QBox.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QByType.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QCommon.cs" />
@@ -18,8 +19,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)QKeyListener.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QLogger.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QAccessor\QObject.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="$(MSBuildThisFileDirectory)QAccessor\" />
+    <Compile Include="$(MSBuildThisFileDirectory)QNativeBuffer.cs" />
   </ItemGroup>
 </Project>
