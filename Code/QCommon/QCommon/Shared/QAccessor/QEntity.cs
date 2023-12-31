@@ -155,7 +155,8 @@ namespace QCommonLib.QAccessor
         {
             if (!EntityManager.Exists(m_Entity)) return false;
 
-            StringBuilder sb = new($"Pos.Set {m_Entity.D()} (value:{newPosition.D()}, delta:{delta.D()}, oldPos:{Position.D()}): ");
+            StringBuilder sb = new();
+            sb.AppendFormat("Pos.Set {0} (value:{1}, delta:{2}, oldPos:{3}): ", m_Entity.D(), newPosition.D(), delta.D(), Position.D());
 
             if (m_Lookup.gaGeometry.HasComponent(m_Entity))
             {
@@ -220,6 +221,25 @@ namespace QCommonLib.QAccessor
                 m_Lookup.gpObjectGeometryData.GetRefRW(m_Entity).ValueRW.m_Pivot = newPosition;
             }
 
+            if (m_Lookup.gaNode.HasBuffer(m_Entity))
+            {
+                sb.Append("gaNode");
+                if (m_Lookup.gaNode.TryGetBuffer(m_Entity, out var buffer))
+                {
+                    sb.AppendFormat("({0})", buffer.Length);
+                    for (int i = 0; i < buffer.Length; i++)
+                    {
+                        var b = buffer[i];
+                        b.m_Position += delta;
+                        buffer[i] = b;
+                    }
+                }
+                sb.Append(", ");
+            }
+
+            EntityManager.AddComponent<Game.Common.Updated>(m_Entity);
+            EntityManager.AddComponent<Game.Common.BatchesUpdated>(m_Entity);
+
             //QLog.Debug(sb.ToString());
 
             return true;
@@ -232,7 +252,8 @@ namespace QCommonLib.QAccessor
 
         public bool RotateTo(quaternion newRotation)
         {
-            //StringBuilder sb = new($"Rotation.Set for {m_Entity.D()} '{QCommon.GetPrefabName(EntityManager, m_Entity)}': ");
+            //StringBuilder sb = new();
+            //sb.AppendFormat("Rotation.Set for {0} '{1}': ", m_Entity.D(), QCommon.GetPrefabName(EntityManager, m_Entity));
             if (m_Lookup.goTransform.HasComponent(m_Entity))
             {
                 //sb.Append($"goTransform");
@@ -243,6 +264,7 @@ namespace QCommonLib.QAccessor
                 //sb.Append($"gnNode");
                 m_Lookup.gnNode.GetRefRW(m_Entity).ValueRW.m_Rotation = newRotation;
             }
+
             //QLog.Debug(sb.ToString());
             return true;
         }

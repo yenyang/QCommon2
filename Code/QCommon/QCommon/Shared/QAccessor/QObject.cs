@@ -41,9 +41,10 @@ namespace QCommonLib.QAccessor
 
             _ReferenceBufferTypes = new()
             {
-                new() { tParentComponent = typeof(Game.Areas.SubArea),  m_FieldInfo = GetEntityReferenceField(typeof(Game.Areas.SubArea)) },
-                new() { tParentComponent = typeof(Game.Net.SubNet),     m_FieldInfo = GetEntityReferenceField(typeof(Game.Net.SubNet)) },
-                new() { tParentComponent = typeof(Game.Net.SubLane),    m_FieldInfo = GetEntityReferenceField(typeof(Game.Net.SubLane)) },
+                new() { tParentComponent = typeof(Game.Areas.SubArea),      m_FieldInfo = GetEntityReferenceField(typeof(Game.Areas.SubArea)) },
+                new() { tParentComponent = typeof(Game.Net.SubNet),         m_FieldInfo = GetEntityReferenceField(typeof(Game.Net.SubNet)) },
+                new() { tParentComponent = typeof(Game.Net.SubLane),        m_FieldInfo = GetEntityReferenceField(typeof(Game.Net.SubLane)) },
+                new() { tParentComponent = typeof(Game.Objects.SubObject),  m_FieldInfo = GetEntityReferenceField(typeof(Game.Objects.SubObject)) },
             };
             m_Children.Dispose();
             var subEntities = GetSubEntities();
@@ -53,11 +54,20 @@ namespace QCommonLib.QAccessor
             {
                 m_Children[i] = new(subEntities[i], system);
             }
+            QLog.Debug($"{e.D()} children: {m_Children.Length}");
         }
 
         public void Dispose()
         {
             m_Children.Dispose();
+        }
+
+        #region Transforming
+
+        public void Transform(Game.Objects.Transform transform)
+        {
+            MoveTo(transform.m_Position);
+            //RotateTo(transform.m_Rotation);
         }
 
         public void MoveBy(float3 delta)
@@ -72,12 +82,13 @@ namespace QCommonLib.QAccessor
 
         public void MoveTo(float3 newPosition)
         {
-            m_Accessor.MoveTo(newPosition);
+            MoveBy(newPosition - m_Accessor.Position);
+            //m_Accessor.MoveTo(newPosition);
 
-            for (int i = 0; i < m_Children.Length; i++)
-            {
-                m_Children[i].MoveTo(newPosition);
-            }
+            //for (int i = 0; i < m_Children.Length; i++)
+            //{
+            //    m_Children[i].MoveTo(newPosition);
+            //}
         }
 
         public void RotateBy(quaternion delta)
@@ -121,20 +132,7 @@ namespace QCommonLib.QAccessor
             return matrix;
         }
 
-        internal void DebugDumpAll()
-        {
-            StringBuilder sb = new("Parent:" + m_Entity.D() + ", children: " + m_Children.Length);
-
-            for (int i = 0; i < m_Children.Length; i++)
-            {
-                sb.AppendFormat("\n    {0}: \"{1}\"",
-                    m_Children[i].m_Entity.D(), 
-                    QCommon.GetPrefabName(EM, m_Children[i].m_Entity)
-                );
-            }
-
-            QLog.Debug(sb.ToString());
-        }
+        #endregion
 
         #region Load children
         private readonly List<Entity> GetSubEntities()
@@ -146,7 +144,7 @@ namespace QCommonLib.QAccessor
 
         private readonly List<Entity> IterateSubEntities(Entity top, Entity e, int depth)
         {
-            if (depth > 3) throw new Exception($"Moveable.IterateSubEntities depth ({depth}) too deep for E{top.D()}/E{e.D()}");
+            if (depth > 3) throw new Exception($"Moveable.IterateSubEntities depth ({depth}) too deep for {top.D()}/{e.D()}");
             depth++;
 
             List<Entity> entities = new();
@@ -208,5 +206,20 @@ namespace QCommonLib.QAccessor
             return field;
         }
         #endregion
+
+        internal void DebugDumpAll()
+        {
+            StringBuilder sb = new("Parent:" + m_Entity.D() + ", children: " + m_Children.Length);
+
+            for (int i = 0; i < m_Children.Length; i++)
+            {
+                sb.AppendFormat("\n    {0}: \"{1}\"",
+                    m_Children[i].m_Entity.D(),
+                    QCommon.GetPrefabName(EM, m_Children[i].m_Entity)
+                );
+            }
+
+            QLog.Debug(sb.ToString());
+        }
     }
 }

@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using Unity.Collections;
 
 namespace QCommonLib
 {
-    public struct QNativeArray<T> : IDisposable where T : unmanaged, IDisposable
+    public struct QNativeArray<T> : IDisposable, IEnumerable<T> where T : unmanaged, IDisposable
     {
         /// <summary>
         /// Whether or not the array has valid elements. Different from m_Buffer.IsCreated in that IsCreated only considers if the array has been created.
@@ -90,5 +92,38 @@ namespace QCommonLib
                 m_Active = false;
             }
         }
+
+        #region Enumeration
+        public IEnumerator<T> GetEnumerator() => new Enumeration(this);
+        IEnumerator IEnumerable.GetEnumerator() => new Enumeration(this);
+        private class Enumeration : IEnumerator<T>
+        {
+            private int _Position = -1;
+            private QNativeArray<T> _Array;
+
+            public Enumeration(QNativeArray<T> a)
+            {
+                _Array = a;
+            }
+
+            public T Current => _Array[_Position];
+
+            object IEnumerator.Current => Current;
+
+            public void Dispose()
+            { }
+
+            public bool MoveNext()
+            {
+                _Position++;
+                return (_Position < _Array.Length);
+            }
+
+            public void Reset()
+            {
+                _Position = -1;
+            }
+        }
+        #endregion
     }
 }
