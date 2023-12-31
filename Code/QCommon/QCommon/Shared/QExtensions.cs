@@ -48,6 +48,14 @@ namespace QCommonLib
             return $"E{e.Index}.{e.Version}";
         }
 
+        public static Bounds3 Expand(this Bounds3 b, float3 size)
+        {
+            return new Bounds3(
+                b.min - size,
+                b.max + size
+            );
+        }
+
         public static void Encapsulate(ref this Bounds3 a, Bounds3 b)
         {
             a.min.x = Math.Min(a.min.x, b.min.x);
