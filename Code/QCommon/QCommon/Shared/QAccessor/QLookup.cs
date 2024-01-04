@@ -15,7 +15,6 @@ namespace QCommonLib.QAccessor
 
         public static void Reset()
         {
-            QLog.Debug($"*** Reset Lookup ***");
             _Initialized = false;
         }
 
@@ -23,7 +22,6 @@ namespace QCommonLib.QAccessor
         {
             if (!_Initialized)
             {
-                QLog.Debug($"*** Creating Lookup ***");
                 m_Lookup = new();
                 m_Lookup.Init(system);
                 _Initialized = true;

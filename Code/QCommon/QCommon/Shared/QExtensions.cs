@@ -1,12 +1,11 @@
 ﻿using Colossal.Mathematics;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 using System.Text;
 using Unity.Entities;
 using Unity.Mathematics;
+using UnityEngine;
 
 namespace QCommonLib
 {
@@ -117,7 +116,8 @@ namespace QCommonLib
 
         public static float Y(this Game.Objects.Transform transform)
         {
-            return transform.m_Rotation.ToEulerDegrees().y;
+            return ((Quaternion)transform.m_Rotation).eulerAngles.y;
+            //return transform.m_Rotation.ToEulerDegrees().y;
         }
 
         public static float Z(this Game.Objects.Transform transform)
@@ -192,163 +192,5 @@ namespace QCommonLib
             if (angle < 0) angle += 360;
             return angle;
         }
-
-        // By/adapted from Krzychu124
-
-        //public static void AddComponentDataByType(this Type type, EntityManager entityManager, Entity e, IComponentData data)
-        //{
-        //    MethodInfo generic = MIT.EM_Methods["AddComponentData"].MakeGenericMethod(type);
-        //    generic.Invoke(entityManager, new object[] { e, data });
-        //}
-
-        //public static void RemoveComponentByType(this Type type, EntityManager entityManager, Entity e)
-        //{
-        //    MethodInfo removeComponent = typeof(EntityManager).GetMethod(nameof(EntityManager.RemoveComponent), new Type[] { typeof(Entity) });
-        //    MethodInfo generic = removeComponent.MakeGenericMethod(type);
-        //    generic.Invoke(entityManager, new object[] { e });
-        //}
-
-        //public static bool HasComponentByType(this Type type, EntityManager entityManager, Entity e)
-        //{
-        //    MethodInfo hasComponent = typeof(EntityManager).GetMethod(nameof(EntityManager.HasComponent), new Type[] { typeof(Entity) });
-        //    MethodInfo generic = hasComponent.MakeGenericMethod(type);
-        //    return (bool)generic.Invoke(entityManager, new object[] { e });
-        //}
-
-        //public static object GetComponentDataByType(this Type type, EntityManager entityManager, Entity e)
-        //{
-        //    MethodInfo getComponentData = typeof(EntityManager).GetMethod(nameof(EntityManager.GetComponentData), new Type[] { typeof(Entity) });
-        //    MethodInfo generic = getComponentData.MakeGenericMethod(type);
-        //    return generic.Invoke(entityManager, new object[] { e });
-        //}
-
-        //public static void SetComponentDataByType(this Type type, EntityManager entityManager, Entity e, IComponentData comp)
-        //{
-        //    MethodInfo generic = MIT.EM_Methods["SetComponentData"].MakeGenericMethod(type);
-        //    generic.Invoke(entityManager, new object[] { e, comp });
-        //}
-
-
-        //public static bool HasBufferByType(this Type type, EntityManager entityManager, Entity e)
-        //{
-        //    MethodInfo hasBuffer = typeof(EntityManager).GetMethod(nameof(EntityManager.HasBuffer), new Type[] { typeof(Entity) });
-        //    MethodInfo generic = hasBuffer.MakeGenericMethod(type);
-        //    return (bool)generic.Invoke(entityManager, new object[] { e });
-        //}
-
-        ///// <summary>
-        ///// Get the field in an IBufferElementData reference buffer component that holds the actual entity reference
-        ///// For example for Game.Areas.SubArea.m_area, it returns m_area
-        ///// </summary>
-        ///// <param name="type">Extension for the IBufferElementData struct type to search</param>
-        ///// <returns>FieldInfo of this field</returns>
-        ///// <exception cref="Exception">If no such field is found</exception>
-        //public static FieldInfo GetEntityReferenceFieldInfo(this Type type)
-        //{
-        //    FieldInfo field = null;
-        //    foreach (FieldInfo f in type.GetFields())
-        //    {
-        //        if (f.FieldType == typeof(Entity))
-        //        {
-        //            field = f;
-        //            break;
-        //        }
-        //    }
-        //    if (field == null) throw new Exception($"Entity field not found for type {type}");
-
-        //    return field;
-        //}
-
-
-        //public static string TryGetPrefabName(this Entity e, EntityManager manager, PrefabSystem prefabSystem)
-        //{
-        //    if (e == Entity.Null || !manager.Exists(e))
-        //    {
-        //        return null;
-        //    }
-
-        //    if (manager.HasComponent<PrefabRef>(e))
-        //    {
-        //        PrefabRef prefabRef = manager.GetComponentData<PrefabRef>(e);
-        //        if (prefabSystem.TryGetPrefab(prefabRef, out PrefabBase prefab))
-        //        {
-        //            return prefab.name;
-        //        }
-        //    }
-        //    else if (manager.HasComponent<PrefabData>(e))
-        //    {
-        //        PrefabData prefabData = manager.GetComponentData<PrefabData>(e);
-        //        if (prefabSystem.TryGetPrefab(prefabData, out PrefabBase prefab))
-        //        {
-        //            return prefab.name;
-        //        }
-        //    }
-        //    return null;
-        //}
-
-        //public static bool IsNumericType(this object o)
-        //{
-        //    switch (Type.GetTypeCode(o.GetType()))
-        //    {
-        //        case TypeCode.Byte:
-        //        case TypeCode.SByte:
-        //        case TypeCode.UInt16:
-        //        case TypeCode.UInt32:
-        //        case TypeCode.UInt64:
-        //        case TypeCode.Int16:
-        //        case TypeCode.Int32:
-        //        case TypeCode.Int64:
-        //        case TypeCode.Decimal:
-        //        case TypeCode.Double:
-        //        case TypeCode.Single:
-        //            return true;
-        //        default:
-        //            return false;
-        //    }
-        //}
-
-        //public static bool IsNumericType(this Type type)
-        //{
-        //    if (type.Namespace == "Unity.Mathematics")
-        //    {
-        //        return true;
-        //    }
-
-        //    switch (Type.GetTypeCode(type))
-        //    {
-        //        case TypeCode.Byte:
-        //        case TypeCode.SByte:
-        //        case TypeCode.UInt16:
-        //        case TypeCode.UInt32:
-        //        case TypeCode.UInt64:
-        //        case TypeCode.Int16:
-        //        case TypeCode.Int32:
-        //        case TypeCode.Int64:
-        //        case TypeCode.Decimal:
-        //        case TypeCode.Double:
-        //        case TypeCode.Single:
-        //            return true;
-        //        default:
-        //            return false;
-        //    }
-        //}
-
-        //public static bool IsEnumerable(object myProperty)
-        //{
-        //    return typeof(IEnumerable).IsInstanceOfType(myProperty)
-        //        || typeof(IEnumerable<>).IsInstanceOfType(myProperty);
-        //}
-
-        //public static bool IsCollection(Type type)
-        //{
-        //    return typeof(ICollection).IsAssignableFrom(type)
-        //        || typeof(ICollection<>).IsAssignableFrom(type);
-        //}
-
-        //public static bool IsList(Type type)
-        //{
-        //    return typeof(IList).IsAssignableFrom(type)
-        //        || typeof(IList<>).IsAssignableFrom(type);
-        //}
     }
 }

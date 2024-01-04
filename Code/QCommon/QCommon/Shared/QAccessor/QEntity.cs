@@ -2,6 +2,7 @@
 using System.Text;
 using Unity.Entities;
 using Unity.Mathematics;
+using UnityEngine;
 
 namespace QCommonLib.QAccessor
 {
@@ -110,6 +111,14 @@ namespace QCommonLib.QAccessor
                 //QLog.Debug(sb.ToString());
 
                 return result;
+            }
+        }
+
+        public float Angle
+        {
+            get
+            {
+                return ((Quaternion)Rotation).eulerAngles.y;
             }
         }
 
@@ -245,50 +254,42 @@ namespace QCommonLib.QAccessor
             return true;
         }
 
-        public bool RotateBy(quaternion delta)
+        public bool RotateBy(float delta, ref Matrix4x4 matrix, float3 origin)
         {
-            return RotateTo(Rotation.Multiply(delta));
+            return RotateTo(((Quaternion)Rotation).eulerAngles.y + delta, ref matrix, origin);
         }
 
-        public bool RotateTo(quaternion newRotation)
+        public bool RotateTo(float angle, ref Matrix4x4 matrix, float3 origin)
         {
-            //StringBuilder sb = new();
-            //sb.AppendFormat("Rotation.Set for {0} '{1}': ", m_Entity.D(), QCommon.GetPrefabName(EntityManager, m_Entity));
+            StringBuilder sb = new();
+            sb.AppendFormat("Rotation.Set for {0} '{1}': ", m_Entity.D(), QCommon.GetPrefabName(EntityManager, m_Entity));
+
+            quaternion newRotation = Quaternion.Euler(0f, angle, 0f);
             if (m_Lookup.goTransform.HasComponent(m_Entity))
             {
-                //sb.Append($"goTransform");
+                sb.Append($"goTransform, ");
                 m_Lookup.goTransform.GetRefRW(m_Entity).ValueRW.m_Rotation = newRotation;
+                m_Lookup.goTransform.GetRefRW(m_Entity).ValueRW.m_Position = matrix.MultiplyPoint(m_Lookup.goTransform.GetRefRO(m_Entity).ValueRO.m_Position - origin);
             }
             if (m_Lookup.gnNode.HasComponent(m_Entity))
             {
-                //sb.Append($"gnNode");
+                sb.Append($"gnNode, ");
                 m_Lookup.gnNode.GetRefRW(m_Entity).ValueRW.m_Rotation = newRotation;
+                m_Lookup.gnNode.GetRefRW(m_Entity).ValueRW.m_Position = matrix.MultiplyPoint(m_Lookup.gnNode.GetRefRO(m_Entity).ValueRO.m_Position - origin);
+            }
+            if (m_Lookup.gnCurve.HasComponent(m_Entity))
+            {
+                sb.Append("gnCurve, ");
+                Bezier4x3 bezier = m_Lookup.gnCurve.GetRefRO(m_Entity).ValueRO.m_Bezier;
+                bezier = RotateBezier4x3(bezier, ref matrix, origin);
+                m_Lookup.gnCurve.GetRefRW(m_Entity).ValueRW.m_Bezier = bezier;
             }
 
-            //QLog.Debug(sb.ToString());
+            //if (QCommon.GetPrefabName(EntityManager, m_Entity).Equals("FenceIndustrialHigh01"))
+            //{
+            //    QLog.Debug(sb.ToString());
+            //}
             return true;
-        }
-
-        //public bool RotateBy(float delta)
-        //{
-        //    return Rotate(delta - AngleD, delta);
-        //}
-
-        //public bool RotateTo(float newAngle)
-        //{
-        //    return Rotate(newAngle, newAngle - AngleD);
-        //}
-
-        //private bool Rotate(float newAngle, float delta)
-        //{
-        //    return false;
-        //}
-
-        private readonly Game.Net.Segment MoveSegment(Game.Net.Segment input, float3 delta)
-        {
-            input.m_Left = MoveBezier4x3(input.m_Left, delta);
-            input.m_Right = MoveBezier4x3(input.m_Right, delta);
-            return input;
         }
 
         private readonly Game.Net.EdgeNodeGeometry MoveEdgeNodeGeometry(Game.Net.EdgeNodeGeometry input, float3 delta)
@@ -300,6 +301,13 @@ namespace QCommonLib.QAccessor
             return input;
         }
 
+        private readonly Game.Net.Segment MoveSegment(Game.Net.Segment input, float3 delta)
+        {
+            input.m_Left = MoveBezier4x3(input.m_Left, delta);
+            input.m_Right = MoveBezier4x3(input.m_Right, delta);
+            return input;
+        }
+
         private readonly Bezier4x3 MoveBezier4x3(Bezier4x3 input, float3 delta)
         {
             input.a += delta;
@@ -308,7 +316,16 @@ namespace QCommonLib.QAccessor
             input.d += delta;
             return input;
         }
-        
+
+        private readonly Bezier4x3 RotateBezier4x3(Bezier4x3 input, ref Matrix4x4 matrix, float3 origin)
+        {
+            input.a = (float3)matrix.MultiplyPoint(input.a - origin);
+            input.b = (float3)matrix.MultiplyPoint(input.b - origin);
+            input.c = (float3)matrix.MultiplyPoint(input.c - origin);
+            input.d = (float3)matrix.MultiplyPoint(input.d - origin);
+            return input;
+        }
+
         private readonly Bounds3 MoveBounds3(Bounds3 input, float3 delta)
         {
             input.min += delta;

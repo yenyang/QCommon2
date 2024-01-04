@@ -54,7 +54,7 @@ namespace QCommonLib.QAccessor
             {
                 m_Children[i] = new(subEntities[i], system);
             }
-            QLog.Debug($"{e.D()} children: {m_Children.Length}");
+            //QLog.Debug($"QObject.ctor {e.D()} children: {m_Children.Length}");
         }
 
         public void Dispose()
@@ -63,11 +63,10 @@ namespace QCommonLib.QAccessor
         }
 
         #region Transforming
-
-        public void Transform(Game.Objects.Transform transform)
+        public void Transform(float3 position, float angle)
         {
-            MoveTo(transform.m_Position);
-            //RotateTo(transform.m_Rotation);
+            MoveTo(position);
+            RotateTo(angle);
         }
 
         public void MoveBy(float3 delta)
@@ -83,55 +82,30 @@ namespace QCommonLib.QAccessor
         public void MoveTo(float3 newPosition)
         {
             MoveBy(newPosition - m_Accessor.Position);
-            //m_Accessor.MoveTo(newPosition);
-
-            //for (int i = 0; i < m_Children.Length; i++)
-            //{
-            //    m_Children[i].MoveTo(newPosition);
-            //}
         }
 
-        public void RotateBy(quaternion delta)
+        public void RotateTo(float newAngle)
         {
-            m_Accessor.RotateBy(delta);
-
-            if (m_Children.Length > 0)
-            {
-                Matrix4x4 matrix = GetMatrix(delta);
-                for (int i = 0; i < m_Children.Length; i++)
-                {
-                    m_Children[i].RotateBy(delta);
-                    float3 newPos = (float3)matrix.MultiplyPoint(m_Children[i].Position);
-                    m_Children[i].MoveTo(newPos);
-                }
-            }
-        }
-
-        public void RotateTo(quaternion newRotation)
-        {
-            m_Accessor.RotateTo(newRotation);
-
-            if (m_Children.Length > 0)
-            {
-                quaternion delta = newRotation.Multiply(m_Accessor.Rotation.Inverse());
-                Matrix4x4 matrix = GetMatrix(delta);
-                for (int i = 0; i < m_Children.Length; i++)
-                {
-                    m_Children[i].RotateBy(delta);
-                    float3 newPos = (float3)matrix.MultiplyPoint(m_Children[i].Position);
-                    m_Children[i].MoveTo(newPos);
-                }
-            }
-        }
-
-        private Matrix4x4 GetMatrix(quaternion delta)
-        {
+            float delta = newAngle - m_Accessor.Angle;
             float3 origin = m_Accessor.Position;
-            Matrix4x4 matrix = default;
-            matrix.SetTRS(origin, delta, Vector3.one);
-            return matrix;
+            GetMatrix(delta, origin, out Matrix4x4 matrix);
+
+            m_Accessor.RotateTo(newAngle, ref matrix, origin);
+
+            if (m_Children.Length > 0)
+            {
+                for (int i = 0; i < m_Children.Length; i++)
+                {
+                    m_Children[i].RotateBy(delta, ref matrix, origin);
+                }
+            }
         }
 
+        private readonly void GetMatrix(float delta, float3 origin, out Matrix4x4 matrix)
+        {
+            matrix = default;
+            matrix.SetTRS(origin, Quaternion.Euler(0f, delta, 0f), Vector3.one);
+        }
         #endregion
 
         #region Load children
