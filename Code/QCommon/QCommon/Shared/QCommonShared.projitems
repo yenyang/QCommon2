@@ -10,7 +10,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)QAccessor\QLookup.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)QBox.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QByType.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QCommon.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QAccessor\QEntity.cs" />

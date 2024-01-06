@@ -26,40 +26,40 @@ namespace QCommonLib.QAccessor
         internal readonly EntityManager EM => World.DefaultGameObjectInjectionWorld.EntityManager;
 
         public Entity m_Entity;
-        public QEntity m_Accessor;
+        public QEntity m_Parent;
         internal QLookup m_Lookup;
         internal NativeArray<QEntity> m_Children;
-        private readonly List<QReferenceBufferType> _ReferenceBufferTypes;
 
         internal QObject(Entity e, SystemBase system)
         {
-            _ReferenceBufferTypes = new();
+            if (e == Entity.Null) throw new ArgumentNullException("Creating QObject with null entity");
+
             m_Lookup = QLookup.Get(system);
             m_Entity = e;
-            m_Accessor = new(e, system);
-            m_Children = new();
+            m_Parent = new(e, system);
+            var subEntities = GetSubEntities(e);
 
-            _ReferenceBufferTypes = new()
+            if (subEntities.Count > 0)
             {
-                new() { tParentComponent = typeof(Game.Areas.SubArea),      m_FieldInfo = GetEntityReferenceField(typeof(Game.Areas.SubArea)) },
-                new() { tParentComponent = typeof(Game.Net.SubNet),         m_FieldInfo = GetEntityReferenceField(typeof(Game.Net.SubNet)) },
-                new() { tParentComponent = typeof(Game.Net.SubLane),        m_FieldInfo = GetEntityReferenceField(typeof(Game.Net.SubLane)) },
-                new() { tParentComponent = typeof(Game.Objects.SubObject),  m_FieldInfo = GetEntityReferenceField(typeof(Game.Objects.SubObject)) },
-            };
-            m_Children.Dispose();
-            var subEntities = GetSubEntities();
-
-            m_Children = new(subEntities.Count, Allocator.Persistent);
-            for (int i = 0; i < subEntities.Count; i++)
-            {
-                m_Children[i] = new(subEntities[i], system);
+                // This does not get disposed, causing mem leak
+                m_Children = new(subEntities.Count, Allocator.Persistent);
+                for (int i = 0; i < subEntities.Count; i++)
+                {
+                    if (subEntities[i] == Entity.Null) throw new NullReferenceException($"Creating child for {e.D()} with null entity");
+                    m_Children[i] = new(subEntities[i], system);
+                }
             }
-            //QLog.Debug($"QObject.ctor {e.D()} children: {m_Children.Length}");
+            else
+            {
+                m_Children = new();
+            }
         }
 
         public void Dispose()
         {
-            m_Children.Dispose();
+            //TODO Figure out why this crashes the game
+            //QLog.Debug($"QObject.Dispose children: {m_Children.IsCreated}{(m_Children.IsCreated ? $"/{m_Children.Length}/<{m_Children[0]}>" : "")} {MIT.m_Instance.ToolAction}/{MIT.m_Instance.ToolState}/{MIT.m_Instance.CreationMode}");
+            //m_Children.Dispose();
         }
 
         #region Transforming
@@ -71,7 +71,7 @@ namespace QCommonLib.QAccessor
 
         public void MoveBy(float3 delta)
         {
-            m_Accessor.MoveBy(delta);
+            m_Parent.MoveBy(delta);
             
             for (int i = 0; i < m_Children.Length; i++)
             {
@@ -81,16 +81,16 @@ namespace QCommonLib.QAccessor
 
         public void MoveTo(float3 newPosition)
         {
-            MoveBy(newPosition - m_Accessor.Position);
+            MoveBy(newPosition - m_Parent.Position);
         }
 
         public void RotateTo(float newAngle)
         {
-            float delta = newAngle - m_Accessor.Angle;
-            float3 origin = m_Accessor.Position;
+            float delta = newAngle - m_Parent.Angle;
+            float3 origin = m_Parent.Position;
             GetMatrix(delta, origin, out Matrix4x4 matrix);
 
-            m_Accessor.RotateTo(newAngle, ref matrix, origin);
+            m_Parent.RotateTo(newAngle, ref matrix, origin);
 
             if (m_Children.Length > 0)
             {
@@ -109,21 +109,21 @@ namespace QCommonLib.QAccessor
         #endregion
 
         #region Load children
-        private readonly List<Entity> GetSubEntities()
+        private static List<Entity> GetSubEntities(Entity e)
         {
-            List<Entity> entities = IterateSubEntities(m_Entity, m_Entity, 0);
+            List<Entity> entities = IterateSubEntities(e, e, 0);
 
             return entities;
         }
 
-        private readonly List<Entity> IterateSubEntities(Entity top, Entity e, int depth)
+        private static List<Entity> IterateSubEntities(Entity top, Entity e, int depth)
         {
             if (depth > 3) throw new Exception($"Moveable.IterateSubEntities depth ({depth}) too deep for {top.D()}/{e.D()}");
             depth++;
 
             List<Entity> entities = new();
 
-            foreach (QReferenceBufferType type in _ReferenceBufferTypes)
+            foreach (QReferenceBufferType type in GetReferenceTypes())
             {
                 if (QByType.HasBuffer(type.tParentComponent, e))
                 {
@@ -146,6 +146,17 @@ namespace QCommonLib.QAccessor
 
             return entities;
         }
+
+        private static List<QReferenceBufferType> GetReferenceTypes()
+        {
+            return new()
+            {
+                new() { tParentComponent = typeof(Game.Areas.SubArea),      m_FieldInfo = GetEntityReferenceField(typeof(Game.Areas.SubArea)) },
+                new() { tParentComponent = typeof(Game.Net.SubNet),         m_FieldInfo = GetEntityReferenceField(typeof(Game.Net.SubNet)) },
+                new() { tParentComponent = typeof(Game.Net.SubLane),        m_FieldInfo = GetEntityReferenceField(typeof(Game.Net.SubLane)) },
+                new() { tParentComponent = typeof(Game.Objects.SubObject),  m_FieldInfo = GetEntityReferenceField(typeof(Game.Objects.SubObject)) },
+            };
+        }
         #endregion
 
         #region Low level entity access
@@ -157,7 +168,7 @@ namespace QCommonLib.QAccessor
         /// <param name="index">How many entity fields to skip over</param>
         /// <returns>FieldInfo of this field</returns>
         /// <exception cref="Exception">If no such field is found</exception>
-        public readonly FieldInfo GetEntityReferenceField(Type type, int index = 0)
+        public static FieldInfo GetEntityReferenceField(Type type, int index = 0)
         {
             int c = 0;
             FieldInfo field = null;
@@ -181,16 +192,24 @@ namespace QCommonLib.QAccessor
         }
         #endregion
 
+        public readonly override string ToString()
+        {
+            return "Parent:" + m_Entity.D() + ", children: " + (m_Children.IsCreated ? m_Children.Length : "Not Created!");
+        }
+
         internal void DebugDumpAll()
         {
-            StringBuilder sb = new("Parent:" + m_Entity.D() + ", children: " + m_Children.Length);
+            StringBuilder sb = new("Parent:" + m_Entity.D() + ", children: " + (m_Children.IsCreated ? m_Children.Length : "Not Created!"));
 
-            for (int i = 0; i < m_Children.Length; i++)
+            if (m_Children.IsCreated)
             {
-                sb.AppendFormat("\n    {0}: \"{1}\"",
-                    m_Children[i].m_Entity.D(),
-                    QCommon.GetPrefabName(EM, m_Children[i].m_Entity)
-                );
+                for (int i = 0; i < m_Children.Length; i++)
+                {
+                    sb.AppendFormat("\n    {0}: \"{1}\"",
+                        m_Children[i].m_Entity.D(),
+                        QCommon.GetPrefabName(EM, m_Children[i].m_Entity)
+                    );
+                }
             }
 
             QLog.Debug(sb.ToString());

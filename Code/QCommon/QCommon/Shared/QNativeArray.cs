@@ -27,13 +27,13 @@ namespace QCommonLib
         internal Allocator m_Allocator;
 
         /// <summary>
-        /// Constructor, does not create the actual array.
+        /// Constructor, creates actual array.
         /// </summary>
-        public QNativeArray()
+        public QNativeArray(int length, Allocator allocator = Allocator.TempJob)
         {
-            m_Array = new(1, Allocator.Persistent);
-            m_Allocator = Allocator.Persistent;
-            m_Active = false;
+            m_Allocator = allocator;
+            m_Active = true;
+            m_Array = new(length, allocator);
         }
 
         /// <summary>
@@ -61,19 +61,6 @@ namespace QCommonLib
                 m_Active = true;
                 m_Array[i] = value;
             }
-        }
-
-        /// <summary>
-        /// Create the actual array
-        /// </summary>
-        /// <param name="length">How many possible elements should the array contain.</param>
-        /// <param name="allocator">The allocator to use for the native array.</param>
-        public void Create(int length, Allocator allocator = Allocator.TempJob)
-        {
-            Dispose();
-            m_Array = new(length, allocator);
-            m_Allocator = allocator;
-            m_Active = true;
         }
 
         /// <summary>
