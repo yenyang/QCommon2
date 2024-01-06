@@ -41,7 +41,6 @@ namespace QCommonLib.QAccessor
 
             if (subEntities.Count > 0)
             {
-                // This does not get disposed, causing mem leak
                 m_Children = new(subEntities.Count, Allocator.Persistent);
                 for (int i = 0; i < subEntities.Count; i++)
                 {
@@ -57,9 +56,7 @@ namespace QCommonLib.QAccessor
 
         public void Dispose()
         {
-            //TODO Figure out why this crashes the game
-            //QLog.Debug($"QObject.Dispose children: {m_Children.IsCreated}{(m_Children.IsCreated ? $"/{m_Children.Length}/<{m_Children[0]}>" : "")} {MIT.m_Instance.ToolAction}/{MIT.m_Instance.ToolState}/{MIT.m_Instance.CreationMode}");
-            //m_Children.Dispose();
+            m_Children.Dispose();
         }
 
         #region Transforming
