@@ -261,34 +261,44 @@ namespace QCommonLib.QAccessor
 
         public bool RotateTo(float angle, ref Matrix4x4 matrix, float3 origin)
         {
-            StringBuilder sb = new();
-            sb.AppendFormat("Rotation.Set for {0} '{1}': ", m_Entity.D(), QCommon.GetPrefabName(EntityManager, m_Entity));
+            //StringBuilder sb = new();
+            //sb.AppendFormat("Rotation.Set for {0} '{1}': ", m_Entity.D(), QCommon.GetPrefabName(EntityManager, m_Entity));
 
             quaternion newRotation = Quaternion.Euler(0f, angle, 0f);
             if (m_Lookup.goTransform.HasComponent(m_Entity))
             {
-                sb.Append($"goTransform, ");
+                //sb.Append($"goTransform, ");
                 m_Lookup.goTransform.GetRefRW(m_Entity).ValueRW.m_Rotation = newRotation;
                 m_Lookup.goTransform.GetRefRW(m_Entity).ValueRW.m_Position = matrix.MultiplyPoint(m_Lookup.goTransform.GetRefRO(m_Entity).ValueRO.m_Position - origin);
             }
             if (m_Lookup.gnNode.HasComponent(m_Entity))
             {
-                sb.Append($"gnNode, ");
+                //sb.Append($"gnNode, ");
                 m_Lookup.gnNode.GetRefRW(m_Entity).ValueRW.m_Rotation = newRotation;
                 m_Lookup.gnNode.GetRefRW(m_Entity).ValueRW.m_Position = matrix.MultiplyPoint(m_Lookup.gnNode.GetRefRO(m_Entity).ValueRO.m_Position - origin);
             }
             if (m_Lookup.gnCurve.HasComponent(m_Entity))
             {
-                sb.Append("gnCurve, ");
+                //sb.Append("gnCurve, ");
                 Bezier4x3 bezier = m_Lookup.gnCurve.GetRefRO(m_Entity).ValueRO.m_Bezier;
                 bezier = RotateBezier4x3(bezier, ref matrix, origin);
                 m_Lookup.gnCurve.GetRefRW(m_Entity).ValueRW.m_Bezier = bezier;
             }
+            if (m_Lookup.gaNode.HasBuffer(m_Entity))
+            {
+                //sb.Append("gaNode, ");
+                if (m_Lookup.gaNode.TryGetBuffer(m_Entity, out var buffer))
+                {
+                    for (int i = 0; i < buffer.Length; i++)
+                    {
+                        Game.Areas.Node node = buffer[i];
+                        node.m_Position = (float3)matrix.MultiplyPoint(node.m_Position - origin);
+                        buffer[i] = node;
+                    }
+                }
+            }
 
-            //if (QCommon.GetPrefabName(EntityManager, m_Entity).Equals("FenceIndustrialHigh01"))
-            //{
-            //    QLog.Debug(sb.ToString());
-            //}
+            //QLog.Debug(sb.ToString());
             return true;
         }
 

@@ -47,6 +47,11 @@ namespace QCommonLib
             return $"E{e.Index}.{e.Version}";
         }
 
+        public static float4 Expand(this float4 area, float distance)
+        {
+            return new float4(area.x - distance, area.y - distance, area.z + distance, area.w + distance);
+        }
+
         public static Bounds3 Expand(this Bounds3 b, float3 size)
         {
             return new Bounds3(
