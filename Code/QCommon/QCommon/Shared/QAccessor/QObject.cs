@@ -27,14 +27,12 @@ namespace QCommonLib.QAccessor
 
         public Entity m_Entity;
         public QEntity m_Parent;
-        internal QLookup m_Lookup;
         internal NativeArray<QEntity> m_Children;
 
         internal QObject(Entity e, SystemBase system)
         {
             if (e == Entity.Null) throw new ArgumentNullException("Creating QObject with null entity");
 
-            m_Lookup = QLookup.Get(system);
             m_Entity = e;
             m_Parent = new(e, system);
             var subEntities = GetSubEntities(e);
