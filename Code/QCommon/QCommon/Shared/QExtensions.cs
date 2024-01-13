@@ -11,86 +11,18 @@ namespace QCommonLib
 {
     internal static class QExtensions
     {
-        public static string ToStringNoTrace(this Exception e)
+        public static float3 Center(this Bounds3 bounds)
         {
-            StringBuilder stringBuilder = new(e.GetType().ToString());
-            stringBuilder.Append(": ").Append(e.Message);
-            return stringBuilder.ToString();
-        }
-
-        public static string RemoveWhitespace(this string input)
-        {
-            return new string(input.ToCharArray()
-                .Where(c => !char.IsWhiteSpace(c))
-                .ToArray());
-        }
-
-        public static quaternion Multiply(this quaternion a, quaternion b)
-        {
-            return math.normalize(math.mul(a, b));
-        }
-
-        public static quaternion Inverse(this quaternion q)
-        {
-            float num = q.value.x * q.value.x + q.value.y * q.value.y + q.value.z * q.value.z + q.value.w * q.value.w;
-            float num2 = 1f / num;
-            quaternion result = default;
-            result.value.x = (0f - q.value.x) * num2;
-            result.value.y = (0f - q.value.y) * num2;
-            result.value.z = (0f - q.value.z) * num2;
-            result.value.w = q.value.w * num2;
-            return result;
+            float x = bounds.x.min + (bounds.x.max - bounds.x.min) / 2;
+            float y = bounds.y.min + (bounds.y.max - bounds.y.min) / 2;
+            float z = bounds.z.min + (bounds.z.max - bounds.z.min) / 2;
+            return new float3(x, y, z);
         }
 
         public static string D(this Entity e)
         {
             return $"E{e.Index}.{e.Version}";
         }
-
-        public static float4 Expand(this float4 area, float distance)
-        {
-            return new float4(area.x - distance, area.y - distance, area.z + distance, area.w + distance);
-        }
-
-        public static Bounds3 Expand(this Bounds3 b, float3 size)
-        {
-            return new Bounds3(
-                b.min - size,
-                b.max + size
-            );
-        }
-
-        public static void Encapsulate(ref this Bounds3 a, Bounds3 b)
-        {
-            a.min.x = Math.Min(a.min.x, b.min.x);
-            a.min.y = Math.Min(a.min.y, b.min.y);
-            a.min.z = Math.Min(a.min.z, b.min.z);
-            a.max.x = Math.Max(a.max.x, b.max.x);
-            a.max.y = Math.Max(a.max.y, b.max.y);
-            a.max.z = Math.Max(a.max.z, b.max.z);
-        }
-
-        public static float3 Center(this Bounds3 bounds)
-        {
-            float x = bounds.x.min + (bounds.x.max - bounds.x.min) / 2;
-            float y = bounds.y.min + (bounds.y.max - bounds.y.min) / 2;
-            float z = bounds.z.min + (bounds.z.max - bounds.z.min) / 2;
-            //QLoggerStatic.Debug($"{bounds.x.min},{bounds.y.min},{bounds.z.min} - {bounds.x.max},{bounds.y.max},{bounds.z.max}\nCenter:{x},{y},{z}");
-            return new float3(x, y, z);
-        }
-
-        //public static void SetInvalid(this float3 f)
-        //{
-        //    f.x = -9999.69f;
-        //    f.y = -9999.69f;
-        //    f.z = -9999.69f;
-        //}
-
-        //public static bool IsValid(this float3 f)
-        //{
-        //    if (f.x == -9999.69f && f.y == -9999.69f && f.z == -9999.69f) return false;
-        //    return true;
-        //}
 
         public static string D(this Game.Objects.Transform t)
         {
@@ -113,37 +45,56 @@ namespace QCommonLib
             value = tuple.Value;
         }
 
-
-        public static float X(this Game.Objects.Transform transform)
+        public static float DistanceXZ(this float3 a, float3 b)
         {
-            return transform.m_Rotation.ToEulerDegrees().x;
+            return math.distance(new float2(a.x, a.z), new float2(b.x, b.z));
         }
 
-        public static float Y(this Game.Objects.Transform transform)
+        public static void Encapsulate(ref this Bounds3 a, Bounds3 b)
         {
-            return ((Quaternion)transform.m_Rotation).eulerAngles.y;
-            //return transform.m_Rotation.ToEulerDegrees().y;
+            a.min.x = Math.Min(a.min.x, b.min.x);
+            a.min.y = Math.Min(a.min.y, b.min.y);
+            a.min.z = Math.Min(a.min.z, b.min.z);
+            a.max.x = Math.Max(a.max.x, b.max.x);
+            a.max.y = Math.Max(a.max.y, b.max.y);
+            a.max.z = Math.Max(a.max.z, b.max.z);
         }
 
-        public static float Z(this Game.Objects.Transform transform)
+        public static Bounds3 Expand(this Bounds3 b, float3 size)
         {
-            return transform.m_Rotation.ToEulerDegrees().z;
+            return new Bounds3(
+                b.min - size,
+                b.max + size
+            );
         }
 
-
-        public static float X(this quaternion quat)
+        public static float4 Expand(this float4 area, float distance)
         {
-            return quat.ToEulerDegrees().x;
+            return new float4(area.x - distance, area.y - distance, area.z + distance, area.w + distance);
         }
 
-        public static float Y(this quaternion quat)
+        public static quaternion Inverse(this quaternion q)
         {
-            return quat.ToEulerDegrees().y;
+            float num = q.value.x * q.value.x + q.value.y * q.value.y + q.value.z * q.value.z + q.value.w * q.value.w;
+            float num2 = 1f / num;
+            quaternion result = default;
+            result.value.x = (0f - q.value.x) * num2;
+            result.value.y = (0f - q.value.y) * num2;
+            result.value.z = (0f - q.value.z) * num2;
+            result.value.w = q.value.w * num2;
+            return result;
         }
 
-        public static float Z(this quaternion quat)
+        public static quaternion Multiply(this quaternion a, quaternion b)
         {
-            return quat.ToEulerDegrees().z;
+            return math.normalize(math.mul(a, b));
+        }
+
+        public static string RemoveWhitespace(this string input)
+        {
+            return new string(input.ToCharArray()
+                .Where(c => !char.IsWhiteSpace(c))
+                .ToArray());
         }
 
         public static float3 ToEulerDegrees(this quaternion quat)
@@ -196,6 +147,46 @@ namespace QCommonLib
             angle %= 360;
             if (angle < 0) angle += 360;
             return angle;
+        }
+
+        public static string ToStringNoTrace(this Exception e)
+        {
+            StringBuilder sb = new(e.GetType().ToString());
+            sb.Append(": ").Append(e.Message);
+            return sb.ToString();
+        }
+
+
+        public static float X(this Game.Objects.Transform transform)
+        {
+            return transform.m_Rotation.ToEulerDegrees().x;
+        }
+
+        public static float Y(this Game.Objects.Transform transform)
+        {
+            return ((Quaternion)transform.m_Rotation).eulerAngles.y;
+            //return transform.m_Rotation.ToEulerDegrees().y;
+        }
+
+        public static float Z(this Game.Objects.Transform transform)
+        {
+            return transform.m_Rotation.ToEulerDegrees().z;
+        }
+
+
+        public static float X(this quaternion quat)
+        {
+            return quat.ToEulerDegrees().x;
+        }
+
+        public static float Y(this quaternion quat)
+        {
+            return quat.ToEulerDegrees().y;
+        }
+
+        public static float Z(this quaternion quat)
+        {
+            return quat.ToEulerDegrees().z;
         }
     }
 }
