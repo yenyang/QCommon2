@@ -131,10 +131,10 @@ namespace QCommonLib.QAccessor
                             entities.Add(sub);
                             entities.AddRange(IterateSubEntities(top, sub, depth));
                         }
-                        else
-                        {
-                            QLog.Debug($"Duplicate subEntity found: {sub.D()}");
-                        }
+                        //else
+                        //{
+                        //    QLog.Debug($"Duplicate subEntity found: {sub.D()}");
+                        //}
                     }
                 }
             }

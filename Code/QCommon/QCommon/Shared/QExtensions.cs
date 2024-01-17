@@ -47,7 +47,7 @@ namespace QCommonLib
 
         public static float DistanceXZ(this float3 a, float3 b)
         {
-            return math.distance(new float2(a.x, a.z), new float2(b.x, b.z));
+            return math.abs(math.distance(new float2(a.x, a.z), new float2(b.x, b.z)));
         }
 
         public static void Encapsulate(ref this Bounds3 a, Bounds3 b)
@@ -83,6 +83,26 @@ namespace QCommonLib
             result.value.z = (0f - q.value.z) * num2;
             result.value.w = q.value.w * num2;
             return result;
+        }
+
+        public static float3 Max(this Quad3 q)
+        {
+            return (q.a.Max(q.b)).Max(q.c.Max(q.d));
+        }
+
+        public static float3 Max(this float3 a, float3 b)
+        {
+            return new(Mathf.Max(a.x, b.x), Mathf.Max(a.y, b.y), Mathf.Max(a.z, b.z));
+        }
+
+        public static float3 Min(this Quad3 q)
+        {
+            return (q.a.Min(q.b)).Min(q.c.Min(q.d));
+        }
+
+        public static float3 Min(this float3 a, float3 b)
+        {
+            return new(Mathf.Min(a.x, b.x), Mathf.Min(a.y, b.y), Mathf.Min(a.z, b.z));
         }
 
         public static quaternion Multiply(this quaternion a, quaternion b)

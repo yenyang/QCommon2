@@ -19,5 +19,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)QLogger.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QAccessor\QObject.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QNativeArray.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)QTimer.cs" />
   </ItemGroup>
 </Project>
