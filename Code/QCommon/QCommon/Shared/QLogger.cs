@@ -19,7 +19,12 @@ namespace QCommonLib
         /// <summary>
         /// The debug logger object
         /// </summary>
-        internal static QLoggerCustom s_Instance = new(true);
+        internal static QLoggerCustom s_Instance;
+
+        internal static void Init(bool isDebug)
+        {
+            s_Instance = new(isDebug);
+        }
 
         #region Redirect to instance
         /// <summary>
@@ -27,8 +32,11 @@ namespace QCommonLib
         /// </summary>
         public static bool IsDebug
         {
-            get => s_Instance.IsDebug;
-            set => s_Instance.IsDebug = value;
+            get => (s_Instance is not null) && s_Instance.IsDebug;
+            set
+            {
+                if (s_Instance is not null) s_Instance.IsDebug = value;
+            }
         }
 
         public static void Bundle(string key, string message)
