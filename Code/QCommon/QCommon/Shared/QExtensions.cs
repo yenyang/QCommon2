@@ -19,6 +19,13 @@ namespace QCommonLib
             return new float3(x, y, z);
         }
 
+        public static float2 Center2D(this Bounds3 bounds)
+        {
+            float x = bounds.x.min + (bounds.x.max - bounds.x.min) / 2;
+            float z = bounds.z.min + (bounds.z.max - bounds.z.min) / 2;
+            return new float2(x, z);
+        }
+
         public static string D(this Entity e)
         {
             return $"E{e.Index}.{e.Version}";
