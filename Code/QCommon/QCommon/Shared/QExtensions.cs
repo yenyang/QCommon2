@@ -19,6 +19,13 @@ namespace QCommonLib
             return new float3(x, y, z);
         }
 
+        public static float2 Center(this Bounds2 bounds)
+        {
+            float x = bounds.x.min + (bounds.x.max - bounds.x.min) / 2;
+            float y = bounds.y.min + (bounds.y.max - bounds.y.min) / 2;
+            return new float2(x, y);
+        }
+
         public static float2 Center2D(this Bounds3 bounds)
         {
             float x = bounds.x.min + (bounds.x.max - bounds.x.min) / 2;
@@ -29,6 +36,20 @@ namespace QCommonLib
         public static string D(this Entity e)
         {
             return $"E{e.Index}.{e.Version}";
+        }
+
+        public static string DX(this Entity e, EntityManager em)
+        {
+            char type;
+            if (em.HasComponent<Game.Buildings.Building>(e))    type = 'B';
+            else if (em.HasComponent<Game.Objects.Plant>(e))    type = 'P';
+            else if (em.HasComponent<Game.Net.Node>(e))         type = 'N';
+            else if (em.HasComponent<Game.Net.Edge>(e))         type = 'S';
+            else if (em.HasComponent<Game.Objects.Static>(e) 
+                && em.HasComponent<Game.Objects.NetObject>(e))  type = 'R';
+            else                                                type = '?';
+
+            return $"E{e.Index}.{e.Version}/{type} (\"{QCommon.GetPrefabName(em, e)}\")";
         }
 
         public static string D(this Game.Objects.Transform t)
