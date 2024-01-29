@@ -32,9 +32,11 @@ namespace QCommonLib.QAccessor
 
 
         internal BufferLookup<Game.Areas.Node> gaNode;
+        internal BufferLookup<Game.Net.ConnectedEdge> gnConnectedEdge;
         internal ComponentLookup<Game.Areas.Geometry> gaGeometry;
         internal ComponentLookup<Game.Common.Updated> gcUpdated;
         internal ComponentLookup<Game.Net.Curve> gnCurve;
+        internal ComponentLookup<Game.Net.Edge> gnEdge;
         internal ComponentLookup<Game.Net.EdgeGeometry> gnEdgeGeometry;
         internal ComponentLookup<Game.Net.EndNodeGeometry> gnEndNodeGeometry;
         internal ComponentLookup<Game.Net.Node> gnNode;
@@ -49,9 +51,11 @@ namespace QCommonLib.QAccessor
         public void Init(SystemBase system)
         {
             gaNode = system.GetBufferLookup<Game.Areas.Node>();
+            gnConnectedEdge = system.GetBufferLookup<Game.Net.ConnectedEdge>();
             gaGeometry = system.GetComponentLookup<Game.Areas.Geometry>();
             gcUpdated = system.GetComponentLookup<Game.Common.Updated>();
             gnCurve = system.GetComponentLookup<Game.Net.Curve>();
+            gnEdge = system.GetComponentLookup<Game.Net.Edge>();
             gnEdgeGeometry = system.GetComponentLookup<Game.Net.EdgeGeometry>();
             gnEndNodeGeometry = system.GetComponentLookup<Game.Net.EndNodeGeometry>();
             gnNode = system.GetComponentLookup<Game.Net.Node>();
@@ -65,9 +69,11 @@ namespace QCommonLib.QAccessor
         public void Update(SystemBase system)
         {
             gaNode.Update(system);
+            gnConnectedEdge.Update(system);
             gaGeometry.Update(system);
             gcUpdated.Update(system);
             gnCurve.Update(system);
+            gnEdge.Update(system);
             gnEdgeGeometry.Update(system);
             gnEndNodeGeometry.Update(system);
             gnNode.Update(system);

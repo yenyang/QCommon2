@@ -20,5 +20,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)QAccessor\QObject.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QNativeArray.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QTimer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)QTypes.cs" />
   </ItemGroup>
 </Project>
