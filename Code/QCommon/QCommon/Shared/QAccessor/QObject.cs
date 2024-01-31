@@ -21,36 +21,71 @@ namespace QCommonLib.QAccessor
         public FieldInfo m_FieldInfo;
     }
 
+    public interface IQEntity
+    {
+        public float3 Position { get; }
+        public float Angle { get; }
+        public quaternion Rotation { get; }
+
+        public bool MoveBy(float3 delta);
+        public bool Move(float3 newPosition, float3 delta);
+        public bool RotateBy(float delta, ref Matrix4x4 matrix, float3 origin);
+        public bool RotateTo(float angle, ref Matrix4x4 matrix, float3 origin);
+    }
+
     public struct QObject : IDisposable
     {
         internal readonly EntityManager EM => World.DefaultGameObjectInjectionWorld.EntityManager;
 
         public Entity m_Entity;
         public QEntity m_Parent;
-        internal NativeArray<QEntity> m_Children;
+        public QNode m_ParentNode;
+        internal NativeList<QEntity> m_Children;
+        internal NativeList<QNode> m_ChildNodes;
+        internal QTypes.Types m_Type;
 
         internal QObject(Entity e, SystemBase system)
         {
             if (e == Entity.Null) throw new ArgumentNullException("Creating QObject with null entity");
 
             m_Entity = e;
-            m_Parent = new(e, system);
+            m_Type = QTypes.GetEntityType(e);
+            m_Parent = new(e, system, m_Type);
+            m_ParentNode = new(e, system, m_Type);
+            m_Children = new(0, Allocator.Persistent);
+            m_ChildNodes = new(0, Allocator.Persistent);
+
             var subEntities = GetSubEntities(e);
 
             if (subEntities.Count > 0)
             {
-                m_Children = new(subEntities.Count, Allocator.Persistent);
                 for (int i = 0; i < subEntities.Count; i++)
                 {
                     if (subEntities[i] == Entity.Null) throw new NullReferenceException($"Creating child for {e.D()} with null entity");
-                    m_Children[i] = new(subEntities[i], system);
+
+                    QTypes.Types subType = QTypes.GetEntityType(subEntities[i]);
+                    switch (subType)
+                    {
+                        case QTypes.Types.NetSegment:
+                            break;
+
+                        case QTypes.Types.NetNode:
+                            m_ChildNodes.Add(new(subEntities[i], system, subType));
+                            break;
+
+                        default:
+                            m_Children.Add(new(subEntities[i], system, subType));
+                            break;
+                    }
                 }
             }
-            else
-            {
-                m_Children = new();
-            }
         }
+
+        public readonly IQEntity Parent => m_Type switch
+        {
+            QTypes.Types.NetNode => m_ParentNode,
+            _ => m_Parent,
+        };
 
         public void Dispose()
         {
@@ -66,8 +101,13 @@ namespace QCommonLib.QAccessor
 
         public void MoveBy(float3 delta)
         {
-            m_Parent.MoveBy(delta);
-            
+            Parent.MoveBy(delta);
+
+            for (int i = 0; i < m_ChildNodes.Length; i++)
+            {
+                m_ChildNodes[i].MoveBy(delta);
+            }
+
             for (int i = 0; i < m_Children.Length; i++)
             {
                 m_Children[i].MoveBy(delta);
@@ -76,23 +116,25 @@ namespace QCommonLib.QAccessor
 
         public void MoveTo(float3 newPosition)
         {
-            MoveBy(newPosition - m_Parent.Position);
+            MoveBy(newPosition - Parent.Position);
         }
 
         public void RotateTo(float newAngle)
         {
-            float delta = newAngle - m_Parent.Angle;
-            float3 origin = m_Parent.Position;
+            float delta = newAngle - Parent.Angle;
+            float3 origin = Parent.Position;
             GetMatrix(delta, origin, out Matrix4x4 matrix);
 
-            m_Parent.RotateTo(newAngle, ref matrix, origin);
+            Parent.RotateTo(newAngle, ref matrix, origin);
 
-            if (m_Children.Length > 0)
+            for (int i = 0; i < m_ChildNodes.Length; i++)
             {
-                for (int i = 0; i < m_Children.Length; i++)
-                {
-                    m_Children[i].RotateBy(delta, ref matrix, origin);
-                }
+                m_ChildNodes[i].RotateBy(delta, ref matrix, origin);
+            }
+
+            for (int i = 0; i < m_Children.Length; i++)
+            {
+                m_Children[i].RotateBy(delta, ref matrix, origin);
             }
         }
 

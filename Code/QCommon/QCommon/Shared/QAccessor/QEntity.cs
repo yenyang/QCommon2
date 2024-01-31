@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace QCommonLib.QAccessor
 {
-    public struct QEntity
+    public struct QEntity : IQEntity
     {
         internal readonly EntityManager EntityManager => World.DefaultGameObjectInjectionWorld.EntityManager;
 
@@ -16,29 +16,29 @@ namespace QCommonLib.QAccessor
         internal QLookup m_Lookup;
         internal QTypes.Types m_Type;
 
-        internal QEntity(Entity e, SystemBase system)
+        internal QEntity(Entity e, SystemBase system, QTypes.Types type)
         {
             m_Lookup = QLookup.Get(system);
 
             m_Entity = e;
             m_OriginPosition = float.MaxValue;
             m_IsTopLevel = false;
-            m_Type = QTypes.GetEntityType(e);
+            m_Type = type;
         }
 
-        public float3 Position
+        public readonly float3 Position
         {
             get
             {
-                StringBuilder sb = new($"Pos.GET " + m_Entity.DX(EntityManager) + ": ");
+                StringBuilder sb = new($"Pos.GET " + m_Entity.DX() + ": ");
                 float3 result;
 
                 if (m_Type == QTypes.Types.NetSegment)
                 {
                     Bezier4x3 bezier = m_Lookup.gnCurve.GetRefRO(m_Entity).ValueRO.m_Bezier;
                     result = (bezier.a + bezier.b + bezier.c + bezier.d) / 4;
-                    sb.AppendFormat("Segment:{0}", result.DX());
-                    QLog.Bundle("GET", sb.ToString());
+                    //sb.AppendFormat("Segment:{0}", result.DX());
+                    //QLog.Bundle("GET", sb.ToString());
                     return result;
                 }
 
@@ -129,7 +129,7 @@ namespace QCommonLib.QAccessor
             }
         }
 
-        public float Angle
+        public readonly float Angle
         {
             get
             {
@@ -137,7 +137,7 @@ namespace QCommonLib.QAccessor
             }
         }
 
-        public quaternion Rotation
+        public readonly quaternion Rotation
         {
             get
             {
@@ -165,17 +165,13 @@ namespace QCommonLib.QAccessor
             }
         }
 
-        public bool MoveBy(float3 delta)
+
+        public readonly bool MoveBy(float3 delta)
         {
             return Move(Position + delta, delta);
         }
 
-        public bool MoveTo(float3 newPosition)
-        {
-            return Move(newPosition, newPosition - Position);
-        }
-
-        private bool Move(float3 newPosition, float3 delta)
+        public readonly bool Move(float3 newPosition, float3 delta)
         {
             if (!EntityManager.Exists(m_Entity)) return false;
 
@@ -199,6 +195,7 @@ namespace QCommonLib.QAccessor
 
             if (m_Lookup.gnNode.HasComponent(m_Entity))
             {
+                QLog.Debug($"Attempting to set position of node {m_Entity.DX()}");
                 sb.Append($"gnNode, ");
                 m_Lookup.gnNode.GetRefRW(m_Entity).ValueRW.m_Position = newPosition;
             }
@@ -391,7 +388,7 @@ namespace QCommonLib.QAccessor
                         Bounds3 newBounds = new(min, max);
                         m_Lookup.gnEdgeGeometry.GetRefRW(edge).ValueRW.m_Bounds = newBounds; */
 
-                        if (!EntityManager.HasComponent<Game.Common.Updated>(edge)) EntityManager.AddComponent<Game.Common.Updated>(edge);
+                        EntityManager.AddComponent<Game.Common.Updated>(edge);
                     }
                 }
                 sb.Append(", ");
@@ -400,18 +397,50 @@ namespace QCommonLib.QAccessor
             EntityManager.AddComponent<Game.Common.Updated>(m_Entity);
             EntityManager.AddComponent<Game.Common.BatchesUpdated>(m_Entity);
 
+            //if (m_Lookup.gnEdge.HasComponent(m_Entity))
+            //{
+            //    Game.Net.Edge edge = m_Lookup.gnEdge.GetRefRO(m_Entity).ValueRO;
+            //    Entity start = edge.m_Start;
+            //    Entity end = edge.m_End;
+
+            //    if (!EntityManager.HasComponent<Game.Common.Updated>(start))
+            //    {
+            //        EntityManager.AddComponent<Game.Common.Updated>(start);
+            //        if (EntityManager.TryGetBuffer<Game.Net.ConnectedEdge>(start, true, out var buffer))
+            //        {
+            //            for (int i = 0; i < buffer.Length; i++)
+            //            {
+            //                EntityManager.AddComponent<Game.Common.Updated>(buffer[i].m_Edge);
+            //            }
+            //        }
+            //    }
+
+            //    if (!EntityManager.HasComponent<Game.Common.Updated>(end))
+            //    {
+            //        EntityManager.AddComponent<Game.Common.Updated>(end);
+            //        if (EntityManager.TryGetBuffer<Game.Net.ConnectedEdge>(end, true, out var buffer))
+            //        {
+            //            for (int i = 0; i < buffer.Length; i++)
+            //            {
+            //                EntityManager.AddComponent<Game.Common.Updated>(buffer[i].m_Edge);
+            //            }
+            //        }
+            //    }
+            //}
+
             //if (m_Lookup.gnNode.HasComponent(m_Entity))
-                QLog.Debug(sb.ToString());
+            QLog.Debug(sb.ToString());
 
             return true;
         }
 
-        public bool RotateBy(float delta, ref Matrix4x4 matrix, float3 origin)
+
+        public readonly bool RotateBy(float delta, ref Matrix4x4 matrix, float3 origin)
         {
             return RotateTo(((Quaternion)Rotation).eulerAngles.y + delta, ref matrix, origin);
         }
 
-        public bool RotateTo(float angle, ref Matrix4x4 matrix, float3 origin)
+        public readonly bool RotateTo(float angle, ref Matrix4x4 matrix, float3 origin)
         {
             //StringBuilder sb = new();
             //sb.AppendFormat("Rotation.Set for {0} '{1}': ", m_Entity.D(), QCommon.GetPrefabName(EntityManager, m_Entity));
@@ -454,7 +483,8 @@ namespace QCommonLib.QAccessor
             return true;
         }
 
-        private readonly Game.Net.EdgeNodeGeometry MoveEdgeNodeGeometry(Game.Net.EdgeNodeGeometry input, float3 delta)
+
+        internal static Game.Net.EdgeNodeGeometry MoveEdgeNodeGeometry(Game.Net.EdgeNodeGeometry input, float3 delta)
         {
             input.m_Left = MoveSegment(input.m_Left, delta);
             input.m_Right = MoveSegment(input.m_Right, delta);
@@ -463,14 +493,14 @@ namespace QCommonLib.QAccessor
             return input;
         }
 
-        private readonly Game.Net.Segment MoveSegment(Game.Net.Segment input, float3 delta)
+        internal static Game.Net.Segment MoveSegment(Game.Net.Segment input, float3 delta)
         {
             input.m_Left = MoveBezier4x3(input.m_Left, delta);
             input.m_Right = MoveBezier4x3(input.m_Right, delta);
             return input;
         }
 
-        private readonly Bezier4x3 MoveBezier4x3(Bezier4x3 input, float3 delta)
+        internal static Bezier4x3 MoveBezier4x3(Bezier4x3 input, float3 delta)
         {
             input.a += delta;
             input.b += delta;
@@ -479,7 +509,7 @@ namespace QCommonLib.QAccessor
             return input;
         }
 
-        private readonly Bezier4x3 RotateBezier4x3(Bezier4x3 input, ref Matrix4x4 matrix, float3 origin)
+        internal static Bezier4x3 RotateBezier4x3(Bezier4x3 input, ref Matrix4x4 matrix, float3 origin)
         {
             input.a = (float3)matrix.MultiplyPoint(input.a - origin);
             input.b = (float3)matrix.MultiplyPoint(input.b - origin);
@@ -488,7 +518,7 @@ namespace QCommonLib.QAccessor
             return input;
         }
 
-        private readonly Bounds3 MoveBounds3(Bounds3 input, float3 delta)
+        internal static Bounds3 MoveBounds3(Bounds3 input, float3 delta)
         {
             input.min += delta;
             input.max += delta;

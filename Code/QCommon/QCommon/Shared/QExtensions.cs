@@ -38,8 +38,10 @@ namespace QCommonLib
             return $"E{e.Index}.{e.Version}";
         }
 
-        public static string DX(this Entity e, EntityManager em)
+        public static string DX(this Entity e)
         {
+            EntityManager em = World.DefaultGameObjectInjectionWorld.EntityManager;
+
             char type;
             if (em.HasComponent<Game.Buildings.Building>(e))    type = 'B';
             else if (em.HasComponent<Game.Objects.Plant>(e))    type = 'P';
@@ -111,6 +113,18 @@ namespace QCommonLib
             result.value.z = (0f - q.value.z) * num2;
             result.value.w = q.value.w * num2;
             return result;
+        }
+
+        public static float3 Lerp(this float3 a, float3 b, float t)
+        {
+            return new float3(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t);
+        }
+
+        public static float3 LerpAbs(this float3 a, float3 b, float t)
+        {
+            float length = math.distance(a, b);
+            t = (length - t) / length;
+            return Lerp(a, b, t);
         }
 
         public static float3 Max(this Quad3 q)
@@ -212,8 +226,7 @@ namespace QCommonLib
 
         public static float Y(this Game.Objects.Transform transform)
         {
-            return ((Quaternion)transform.m_Rotation).eulerAngles.y;
-            //return transform.m_Rotation.ToEulerDegrees().y;
+            return transform.m_Rotation.ToEulerDegrees().y;
         }
 
         public static float Z(this Game.Objects.Transform transform)

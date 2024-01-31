@@ -12,12 +12,21 @@ namespace QCommonLib
             NetSegment,
             NetNode,
             Roundabout,
-            Other
+            SubEntity,
+            Other,
+            Invalid,
         }
 
         public static Types GetEntityType(Entity e)
         {
             EntityManager EM = World.DefaultGameObjectInjectionWorld.EntityManager;
+
+            if (e.Equals(Entity.Null) ||
+                EM.HasComponent<Game.Common.Deleted>(e) ||
+                EM.HasComponent<Game.Common.Terrain>(e))
+            {
+                return Types.Invalid;
+            }
 
             if (EM.HasComponent<Game.Objects.Plant>(e))
             {
