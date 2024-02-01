@@ -80,7 +80,7 @@ namespace QCommonLib
             return math.abs(math.distance(new float2(a.x, a.z), new float2(b.x, b.z)));
         }
 
-        public static void Encapsulate(ref this Bounds3 a, Bounds3 b)
+        public static Bounds3 Encapsulate(this Bounds3 a, Bounds3 b)
         {
             a.min.x = Math.Min(a.min.x, b.min.x);
             a.min.y = Math.Min(a.min.y, b.min.y);
@@ -88,6 +88,7 @@ namespace QCommonLib
             a.max.x = Math.Max(a.max.x, b.max.x);
             a.max.y = Math.Max(a.max.y, b.max.y);
             a.max.z = Math.Max(a.max.z, b.max.z);
+            return a;
         }
 
         public static Bounds3 Expand(this Bounds3 b, float3 size)

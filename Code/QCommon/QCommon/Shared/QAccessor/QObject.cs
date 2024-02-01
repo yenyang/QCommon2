@@ -89,7 +89,13 @@ namespace QCommonLib.QAccessor
 
         public void Dispose()
         {
+            for (int i = 0; i < m_ChildNodes.Length; i++)
+            {
+                m_ChildNodes[i].Dispose();
+            }
+
             m_Children.Dispose();
+            m_ChildNodes.Dispose();
         }
 
         #region Transforming

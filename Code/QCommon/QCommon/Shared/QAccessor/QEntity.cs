@@ -70,7 +70,7 @@ namespace QCommonLib.QAccessor
                     result.y = nodeGeo.m_Position;
                 }
 
-                // The following are not central and should only be used for calculating movement delta
+                // The following might not be central and should only be used for calculating movement delta
                 else if (m_Lookup.grCullingInfo.HasComponent(m_Entity))
                 {
                     sb.Append($"grCullingInfo");
@@ -117,7 +117,7 @@ namespace QCommonLib.QAccessor
                 else
                 {
                     sb.Append($"notFound");
-                    //QLog.Debug($"Failed to find position for entity {e.D()} '{QCommonLib.QCommon.GetPrefabName(EntityManager, e)}'");
+                    //QLog.Debug($"Failed to find position for entity {e.DX()}");
                     result = float3.zero;
                 }
 
@@ -187,44 +187,9 @@ namespace QCommonLib.QAccessor
                 m_Lookup.gaGeometry.GetRefRW(m_Entity).ValueRW.m_Bounds = MoveBounds3(m_Lookup.gaGeometry.GetRefRO(m_Entity).ValueRO.m_Bounds, delta);
             }
 
-            if (m_Lookup.gnCurve.HasComponent(m_Entity))
-            {
-                sb.Append($"gnCurve, ");
-                m_Lookup.gnCurve.GetRefRW(m_Entity).ValueRW.m_Bezier = MoveBezier4x3(m_Lookup.gnCurve.GetRefRO(m_Entity).ValueRO.m_Bezier, delta);
-            }
-
-            if (m_Lookup.gnNode.HasComponent(m_Entity))
-            {
-                QLog.Debug($"Attempting to set position of node {m_Entity.DX()}");
-                sb.Append($"gnNode, ");
-                m_Lookup.gnNode.GetRefRW(m_Entity).ValueRW.m_Position = newPosition;
-            }
-
-            if (m_Lookup.gnNodeGeometry.HasComponent(m_Entity))
-            {
-                sb.Append($"gnNodeGeo, ");
-                m_Lookup.gnNodeGeometry.GetRefRW(m_Entity).ValueRW.m_Bounds = MoveBounds3(m_Lookup.gnNodeGeometry.GetRefRO(m_Entity).ValueRO.m_Bounds, delta);
-            }
-
-            if (m_Lookup.gnEdgeGeometry.HasComponent(m_Entity))
-            {
-                sb.Append($"gnEdgeGeo, ");
-                m_Lookup.gnEdgeGeometry.GetRefRW(m_Entity).ValueRW.m_Start = MoveSegment(m_Lookup.gnEdgeGeometry.GetRefRO(m_Entity).ValueRO.m_Start, delta);
-                m_Lookup.gnEdgeGeometry.GetRefRW(m_Entity).ValueRW.m_End = MoveSegment(m_Lookup.gnEdgeGeometry.GetRefRO(m_Entity).ValueRO.m_End, delta);
-                m_Lookup.gnEdgeGeometry.GetRefRW(m_Entity).ValueRW.m_Bounds = MoveBounds3(m_Lookup.gnEdgeGeometry.GetRefRO(m_Entity).ValueRO.m_Bounds, delta);
-            }
-
-            if (m_Lookup.gnEndNodeGeometry.HasComponent(m_Entity))
-            {
-                sb.Append($"gnEndNodeGeo, ");
-                m_Lookup.gnEndNodeGeometry.GetRefRW(m_Entity).ValueRW.m_Geometry = MoveEdgeNodeGeometry(m_Lookup.gnEndNodeGeometry.GetRefRO(m_Entity).ValueRO.m_Geometry, delta);
-            }
-
-            if (m_Lookup.gnStartNodeGeometry.HasComponent(m_Entity))
-            {
-                sb.Append($"gnStartNodeGeo, ");
-                m_Lookup.gnStartNodeGeometry.GetRefRW(m_Entity).ValueRW.m_Geometry = MoveEdgeNodeGeometry(m_Lookup.gnStartNodeGeometry.GetRefRO(m_Entity).ValueRO.m_Geometry, delta);
-            }
+            /*
+             * Networks would need gnCurve, gnNode, gnNodeGeometry, gnEdgeGeometry, gnEndNodeGeometry, and gnStartNodeGeometry
+             */
 
             if (m_Lookup.goTransform.HasComponent(m_Entity))
             {
@@ -260,176 +225,10 @@ namespace QCommonLib.QAccessor
                 sb.Append(", ");
             }
 
-            if (m_Lookup.gnConnectedEdge.HasBuffer(m_Entity))
-            {
-                sb.Append("gnConnEdge");
-                if (m_Lookup.gnConnectedEdge.TryGetBuffer(m_Entity, out var buffer))
-                {
-                    sb.AppendFormat("({0})", buffer.Length);
-                    for (int i = 0; i < buffer.Length; i++)
-                    {
-                        Entity edge = buffer[i].m_Edge;
-                        var edgeData = EntityManager.GetComponentData<Game.Net.Edge>(edge);
-                        bool isStart = edgeData.m_Start.Equals(m_Entity);
-                        if (isStart)
-                        {
-                            m_Lookup.gnStartNodeGeometry.GetRefRW(edge).ValueRW.m_Geometry = MoveEdgeNodeGeometry(m_Lookup.gnStartNodeGeometry.GetRefRO(edge).ValueRO.m_Geometry, delta);
-                            m_Lookup.gnEdgeGeometry.GetRefRW(edge).ValueRW.m_Start = MoveSegment(m_Lookup.gnEdgeGeometry.GetRefRO(edge).ValueRO.m_Start, delta);
-                            sb.AppendFormat(" S-{0}", edge.D());
-                        }
-                        else
-                        {
-                            m_Lookup.gnEndNodeGeometry.GetRefRW(edge).ValueRW.m_Geometry = MoveEdgeNodeGeometry(m_Lookup.gnEndNodeGeometry.GetRefRO(edge).ValueRO.m_Geometry, delta);
-                            m_Lookup.gnEdgeGeometry.GetRefRW(edge).ValueRW.m_End = MoveSegment(m_Lookup.gnEdgeGeometry.GetRefRO(edge).ValueRO.m_End, delta);
-                            sb.AppendFormat(" E-{0}", edge.D());
-                        }
-
-                        /* Game.Net.Segment a, b;
-                        a = m_Lookup.gnEdgeGeometry.GetRefRO(edge).ValueRO.m_Start;
-                        b = m_Lookup.gnEdgeGeometry.GetRefRO(edge).ValueRO.m_End;
-                        float3 min = float.MaxValue;
-                        if (a.m_Left.a.x < min.x) min.x = a.m_Left.a.x;
-                        if (a.m_Left.b.x < min.x) min.x = a.m_Left.b.x;
-                        if (a.m_Left.c.x < min.x) min.x = a.m_Left.c.x;
-                        if (a.m_Left.d.x < min.x) min.x = a.m_Left.d.x;
-                        if (a.m_Right.a.x < min.x) min.x = a.m_Right.a.x;
-                        if (a.m_Right.b.x < min.x) min.x = a.m_Right.b.x;
-                        if (a.m_Right.c.x < min.x) min.x = a.m_Right.c.x;
-                        if (a.m_Right.d.x < min.x) min.x = a.m_Right.d.x;
-                        if (b.m_Left.a.x < min.x) min.x = b.m_Left.a.x;
-                        if (b.m_Left.b.x < min.x) min.x = b.m_Left.b.x;
-                        if (b.m_Left.c.x < min.x) min.x = b.m_Left.c.x;
-                        if (b.m_Left.d.x < min.x) min.x = b.m_Left.d.x;
-                        if (b.m_Right.a.x < min.x) min.x = b.m_Right.a.x;
-                        if (b.m_Right.b.x < min.x) min.x = b.m_Right.b.x;
-                        if (b.m_Right.c.x < min.x) min.x = b.m_Right.c.x;
-                        if (b.m_Right.d.x < min.x) min.x = b.m_Right.d.x;
-                        if (a.m_Left.a.y < min.y) min.y = a.m_Left.a.y;
-                        if (a.m_Left.b.y < min.y) min.y = a.m_Left.b.y;
-                        if (a.m_Left.c.y < min.y) min.y = a.m_Left.c.y;
-                        if (a.m_Left.d.y < min.y) min.y = a.m_Left.d.y;
-                        if (a.m_Right.a.y < min.y) min.y = a.m_Right.a.y;
-                        if (a.m_Right.b.y < min.y) min.y = a.m_Right.b.y;
-                        if (a.m_Right.c.y < min.y) min.y = a.m_Right.c.y;
-                        if (a.m_Right.d.y < min.y) min.y = a.m_Right.d.y;
-                        if (b.m_Left.a.y < min.y) min.y = b.m_Left.a.y;
-                        if (b.m_Left.b.y < min.y) min.y = b.m_Left.b.y;
-                        if (b.m_Left.c.y < min.y) min.y = b.m_Left.c.y;
-                        if (b.m_Left.d.y < min.y) min.y = b.m_Left.d.y;
-                        if (b.m_Right.a.y < min.y) min.y = b.m_Right.a.y;
-                        if (b.m_Right.b.y < min.y) min.y = b.m_Right.b.y;
-                        if (b.m_Right.c.y < min.y) min.y = b.m_Right.c.y;
-                        if (b.m_Right.d.y < min.y) min.y = b.m_Right.d.y;
-                        if (a.m_Left.a.z < min.z) min.z = a.m_Left.a.z;
-                        if (a.m_Left.b.z < min.z) min.z = a.m_Left.b.z;
-                        if (a.m_Left.c.z < min.z) min.z = a.m_Left.c.z;
-                        if (a.m_Left.d.z < min.z) min.z = a.m_Left.d.z;
-                        if (a.m_Right.a.z < min.z) min.z = a.m_Right.a.z;
-                        if (a.m_Right.b.z < min.z) min.z = a.m_Right.b.z;
-                        if (a.m_Right.c.z < min.z) min.z = a.m_Right.c.z;
-                        if (a.m_Right.d.z < min.z) min.z = a.m_Right.d.z;
-                        if (b.m_Left.a.z < min.z) min.z = b.m_Left.a.z;
-                        if (b.m_Left.b.z < min.z) min.z = b.m_Left.b.z;
-                        if (b.m_Left.c.z < min.z) min.z = b.m_Left.c.z;
-                        if (b.m_Left.d.z < min.z) min.z = b.m_Left.d.z;
-                        if (b.m_Right.a.z < min.z) min.z = b.m_Right.a.z;
-                        if (b.m_Right.b.z < min.z) min.z = b.m_Right.b.z;
-                        if (b.m_Right.c.z < min.z) min.z = b.m_Right.c.z;
-                        if (b.m_Right.d.z < min.z) min.z = b.m_Right.d.z;
-                        float3 max = float.MinValue;
-                        if (a.m_Left.a.x > max.x) max.x = a.m_Left.a.x;
-                        if (a.m_Left.b.x > max.x) max.x = a.m_Left.b.x;
-                        if (a.m_Left.c.x > max.x) max.x = a.m_Left.c.x;
-                        if (a.m_Left.d.x > max.x) max.x = a.m_Left.d.x;
-                        if (a.m_Right.a.x > max.x) max.x = a.m_Right.a.x;
-                        if (a.m_Right.b.x > max.x) max.x = a.m_Right.b.x;
-                        if (a.m_Right.c.x > max.x) max.x = a.m_Right.c.x;
-                        if (a.m_Right.d.x > max.x) max.x = a.m_Right.d.x;
-                        if (b.m_Left.a.x > max.x) max.x = b.m_Left.a.x;
-                        if (b.m_Left.b.x > max.x) max.x = b.m_Left.b.x;
-                        if (b.m_Left.c.x > max.x) max.x = b.m_Left.c.x;
-                        if (b.m_Left.d.x > max.x) max.x = b.m_Left.d.x;
-                        if (b.m_Right.a.x > max.x) max.x = b.m_Right.a.x;
-                        if (b.m_Right.b.x > max.x) max.x = b.m_Right.b.x;
-                        if (b.m_Right.c.x > max.x) max.x = b.m_Right.c.x;
-                        if (b.m_Right.d.x > max.x) max.x = b.m_Right.d.x;
-                        if (a.m_Left.a.y > max.y) max.y = a.m_Left.a.y;
-                        if (a.m_Left.b.y > max.y) max.y = a.m_Left.b.y;
-                        if (a.m_Left.c.y > max.y) max.y = a.m_Left.c.y;
-                        if (a.m_Left.d.y > max.y) max.y = a.m_Left.d.y;
-                        if (a.m_Right.a.y > max.y) max.y = a.m_Right.a.y;
-                        if (a.m_Right.b.y > max.y) max.y = a.m_Right.b.y;
-                        if (a.m_Right.c.y > max.y) max.y = a.m_Right.c.y;
-                        if (a.m_Right.d.y > max.y) max.y = a.m_Right.d.y;
-                        if (b.m_Left.a.y > max.y) max.y = b.m_Left.a.y;
-                        if (b.m_Left.b.y > max.y) max.y = b.m_Left.b.y;
-                        if (b.m_Left.c.y > max.y) max.y = b.m_Left.c.y;
-                        if (b.m_Left.d.y > max.y) max.y = b.m_Left.d.y;
-                        if (b.m_Right.a.y > max.y) max.y = b.m_Right.a.y;
-                        if (b.m_Right.b.y > max.y) max.y = b.m_Right.b.y;
-                        if (b.m_Right.c.y > max.y) max.y = b.m_Right.c.y;
-                        if (b.m_Right.d.y > max.y) max.y = b.m_Right.d.y;
-                        if (a.m_Left.a.z > max.z) max.z = a.m_Left.a.z;
-                        if (a.m_Left.b.z > max.z) max.z = a.m_Left.b.z;
-                        if (a.m_Left.c.z > max.z) max.z = a.m_Left.c.z;
-                        if (a.m_Left.d.z > max.z) max.z = a.m_Left.d.z;
-                        if (a.m_Right.a.z > max.z) max.z = a.m_Right.a.z;
-                        if (a.m_Right.b.z > max.z) max.z = a.m_Right.b.z;
-                        if (a.m_Right.c.z > max.z) max.z = a.m_Right.c.z;
-                        if (a.m_Right.d.z > max.z) max.z = a.m_Right.d.z;
-                        if (b.m_Left.a.z > max.z) max.z = b.m_Left.a.z;
-                        if (b.m_Left.b.z > max.z) max.z = b.m_Left.b.z;
-                        if (b.m_Left.c.z > max.z) max.z = b.m_Left.c.z;
-                        if (b.m_Left.d.z > max.z) max.z = b.m_Left.d.z;
-                        if (b.m_Right.a.z > max.z) max.z = b.m_Right.a.z;
-                        if (b.m_Right.b.z > max.z) max.z = b.m_Right.b.z;
-                        if (b.m_Right.c.z > max.z) max.z = b.m_Right.c.z;
-                        if (b.m_Right.d.z > max.z) max.z = b.m_Right.d.z;
-                        Bounds3 newBounds = new(min, max);
-                        m_Lookup.gnEdgeGeometry.GetRefRW(edge).ValueRW.m_Bounds = newBounds; */
-
-                        EntityManager.AddComponent<Game.Common.Updated>(edge);
-                    }
-                }
-                sb.Append(", ");
-            }
-
             EntityManager.AddComponent<Game.Common.Updated>(m_Entity);
             EntityManager.AddComponent<Game.Common.BatchesUpdated>(m_Entity);
 
-            //if (m_Lookup.gnEdge.HasComponent(m_Entity))
-            //{
-            //    Game.Net.Edge edge = m_Lookup.gnEdge.GetRefRO(m_Entity).ValueRO;
-            //    Entity start = edge.m_Start;
-            //    Entity end = edge.m_End;
-
-            //    if (!EntityManager.HasComponent<Game.Common.Updated>(start))
-            //    {
-            //        EntityManager.AddComponent<Game.Common.Updated>(start);
-            //        if (EntityManager.TryGetBuffer<Game.Net.ConnectedEdge>(start, true, out var buffer))
-            //        {
-            //            for (int i = 0; i < buffer.Length; i++)
-            //            {
-            //                EntityManager.AddComponent<Game.Common.Updated>(buffer[i].m_Edge);
-            //            }
-            //        }
-            //    }
-
-            //    if (!EntityManager.HasComponent<Game.Common.Updated>(end))
-            //    {
-            //        EntityManager.AddComponent<Game.Common.Updated>(end);
-            //        if (EntityManager.TryGetBuffer<Game.Net.ConnectedEdge>(end, true, out var buffer))
-            //        {
-            //            for (int i = 0; i < buffer.Length; i++)
-            //            {
-            //                EntityManager.AddComponent<Game.Common.Updated>(buffer[i].m_Edge);
-            //            }
-            //        }
-            //    }
-            //}
-
-            //if (m_Lookup.gnNode.HasComponent(m_Entity))
-            QLog.Debug(sb.ToString());
+            //QLog.Debug(sb.ToString());
 
             return true;
         }
@@ -442,32 +241,32 @@ namespace QCommonLib.QAccessor
 
         public readonly bool RotateTo(float angle, ref Matrix4x4 matrix, float3 origin)
         {
-            //StringBuilder sb = new();
-            //sb.AppendFormat("Rotation.Set for {0} '{1}': ", m_Entity.D(), QCommon.GetPrefabName(EntityManager, m_Entity));
+            StringBuilder sb = new();
+            sb.AppendFormat("Rotation.Set for {0} '{1}': ", m_Entity.D(), QCommon.GetPrefabName(EntityManager, m_Entity));
 
             quaternion newRotation = Quaternion.Euler(0f, angle, 0f);
             if (m_Lookup.goTransform.HasComponent(m_Entity))
             {
-                //sb.Append($"goTransform, ");
+                sb.Append($"goTransform, ");
                 m_Lookup.goTransform.GetRefRW(m_Entity).ValueRW.m_Rotation = newRotation;
                 m_Lookup.goTransform.GetRefRW(m_Entity).ValueRW.m_Position = matrix.MultiplyPoint(m_Lookup.goTransform.GetRefRO(m_Entity).ValueRO.m_Position - origin);
             }
             if (m_Lookup.gnNode.HasComponent(m_Entity))
             {
-                //sb.Append($"gnNode, ");
+                sb.Append($"gnNode, ");
                 m_Lookup.gnNode.GetRefRW(m_Entity).ValueRW.m_Rotation = newRotation;
                 m_Lookup.gnNode.GetRefRW(m_Entity).ValueRW.m_Position = matrix.MultiplyPoint(m_Lookup.gnNode.GetRefRO(m_Entity).ValueRO.m_Position - origin);
             }
             if (m_Lookup.gnCurve.HasComponent(m_Entity))
             {
-                //sb.Append("gnCurve, ");
+                sb.Append("gnCurve, ");
                 Bezier4x3 bezier = m_Lookup.gnCurve.GetRefRO(m_Entity).ValueRO.m_Bezier;
                 bezier = RotateBezier4x3(bezier, ref matrix, origin);
                 m_Lookup.gnCurve.GetRefRW(m_Entity).ValueRW.m_Bezier = bezier;
             }
             if (m_Lookup.gaNode.HasBuffer(m_Entity))
             {
-                //sb.Append("gaNode, ");
+                sb.Append("gaNode, ");
                 if (m_Lookup.gaNode.TryGetBuffer(m_Entity, out var buffer))
                 {
                     for (int i = 0; i < buffer.Length; i++)
@@ -484,37 +283,49 @@ namespace QCommonLib.QAccessor
         }
 
 
-        internal static Game.Net.EdgeNodeGeometry MoveEdgeNodeGeometry(Game.Net.EdgeNodeGeometry input, float3 delta)
+        internal static Game.Net.EdgeNodeGeometry MoveEdgeNodeGeometry(Game.Net.EdgeNodeGeometry input, float3 delta, bool? isStart = null)
         {
-            input.m_Left = MoveSegment(input.m_Left, delta);
-            input.m_Right = MoveSegment(input.m_Right, delta);
-            input.m_Middle = MoveBezier4x3(input.m_Middle, delta);
-            input.m_Bounds = MoveBounds3(input.m_Bounds, delta);
+            input.m_Left = MoveSegment(input.m_Left, delta, isStart);
+            input.m_Right = MoveSegment(input.m_Right, delta, isStart);
+            input.m_Middle = MoveBezier4x3(input.m_Middle, delta, isStart);
+            input.m_Bounds = UpdateBounds3(input);
             return input;
         }
 
-        internal static Game.Net.Segment MoveSegment(Game.Net.Segment input, float3 delta)
+        internal static Game.Net.Segment MoveSegment(Game.Net.Segment input, float3 delta, bool? isStart = null)
         {
-            input.m_Left = MoveBezier4x3(input.m_Left, delta);
-            input.m_Right = MoveBezier4x3(input.m_Right, delta);
+            input.m_Left = MoveBezier4x3(input.m_Left, delta, isStart);
+            input.m_Right = MoveBezier4x3(input.m_Right, delta, isStart);
             return input;
         }
 
-        internal static Bezier4x3 MoveBezier4x3(Bezier4x3 input, float3 delta)
+        internal static Bezier4x3 MoveBezier4x3(Bezier4x3 input, float3 delta, bool? isStart = null)
         {
-            input.a += delta;
-            input.b += delta;
-            input.c += delta;
-            input.d += delta;
+            if (isStart != false)
+            {
+                input.a += delta;
+                input.b += delta;
+            }
+            if (isStart != true)
+            {
+                input.c += delta;
+                input.d += delta;
+            }
             return input;
         }
 
-        internal static Bezier4x3 RotateBezier4x3(Bezier4x3 input, ref Matrix4x4 matrix, float3 origin)
+        internal static Bezier4x3 RotateBezier4x3(Bezier4x3 input, ref Matrix4x4 matrix, float3 origin, bool? isStart = null)
         {
-            input.a = (float3)matrix.MultiplyPoint(input.a - origin);
-            input.b = (float3)matrix.MultiplyPoint(input.b - origin);
-            input.c = (float3)matrix.MultiplyPoint(input.c - origin);
-            input.d = (float3)matrix.MultiplyPoint(input.d - origin);
+            if (isStart != false)
+            {
+                input.a = (float3)matrix.MultiplyPoint(input.a - origin);
+                input.b = (float3)matrix.MultiplyPoint(input.b - origin);
+            }
+            if (isStart != true)
+            {
+                input.c = (float3)matrix.MultiplyPoint(input.c - origin);
+                input.d = (float3)matrix.MultiplyPoint(input.d - origin);
+            }
             return input;
         }
 
@@ -523,6 +334,35 @@ namespace QCommonLib.QAccessor
             input.min += delta;
             input.max += delta;
             return input;
+        }
+
+        /// <summary>
+        /// Must be called after the m_Left and m_Right values are updated!
+        /// </summary>
+        /// <param name="input">The EdgeNodeGeometry to calculate from</param>
+        /// <returns></returns>
+        internal static Bounds3 UpdateBounds3(Game.Net.EdgeNodeGeometry input)
+        {
+            Bounds3 leftLeft = MathUtils.Bounds(input.m_Left.m_Left);
+            Bounds3 leftRight = MathUtils.Bounds(input.m_Left.m_Right);
+            Bounds3 rightLeft = MathUtils.Bounds(input.m_Right.m_Left);
+            Bounds3 rightRight = MathUtils.Bounds(input.m_Right.m_Right);
+            return leftLeft.Encapsulate(leftRight.Encapsulate(rightLeft.Encapsulate(rightRight)));
+        }
+
+
+        /// <summary>
+        /// Must be called after the m_Start and m_End values are updated!
+        /// </summary>
+        /// <param name="input">The EdgeGeometry to calculate from</param>
+        /// <returns></returns>
+        internal static Bounds3 UpdateBounds3(Game.Net.EdgeGeometry input)
+        {
+            Bounds3 startLeft = MathUtils.Bounds(input.m_Start.m_Left);
+            Bounds3 startRight = MathUtils.Bounds(input.m_Start.m_Right);
+            Bounds3 endLeft = MathUtils.Bounds(input.m_End.m_Left);
+            Bounds3 endRight = MathUtils.Bounds(input.m_End.m_Right);
+            return startLeft.Encapsulate(startRight.Encapsulate(endLeft.Encapsulate(endRight)));
         }
     }
 }
