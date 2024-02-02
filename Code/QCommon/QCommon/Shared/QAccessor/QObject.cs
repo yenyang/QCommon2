@@ -242,16 +242,22 @@ namespace QCommonLib.QAccessor
 
         internal void DebugDumpAll()
         {
-            StringBuilder sb = new("Parent:" + m_Entity.D() + ", children: " + (m_Children.IsCreated ? m_Children.Length : "Not Created!"));
+            StringBuilder sb = new();
+            sb.AppendFormat("Parent: {0}, children: {1}, nodes: {2}", m_Entity.D(), (m_Children.IsCreated ? m_Children.Length : "Not Created!"), (m_ChildNodes.IsCreated ? m_ChildNodes.Length : "Not Created!"));
+
+            if (m_ChildNodes.IsCreated)
+            {
+                for (int i = 0; i < m_ChildNodes.Length; i++)
+                {
+                    sb.AppendFormat("\n    {0}", m_ChildNodes[i].m_Entity.DX());
+                }
+            }
 
             if (m_Children.IsCreated)
             {
                 for (int i = 0; i < m_Children.Length; i++)
                 {
-                    sb.AppendFormat("\n    {0}: \"{1}\"",
-                        m_Children[i].m_Entity.D(),
-                        QCommon.GetPrefabName(EM, m_Children[i].m_Entity)
-                    );
+                    sb.AppendFormat("\n    {0}", m_Children[i].m_Entity.DX());
                 }
             }
 
