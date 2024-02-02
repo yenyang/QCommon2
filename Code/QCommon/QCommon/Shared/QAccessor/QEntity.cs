@@ -292,10 +292,26 @@ namespace QCommonLib.QAccessor
             return input;
         }
 
+        internal static Game.Net.EdgeNodeGeometry RotateEdgeNodeGeometry(Game.Net.EdgeNodeGeometry input, ref Matrix4x4 matrix, float3 origin, bool? isStart = null)
+        {
+            input.m_Left = RotateSegment(input.m_Left, ref matrix, origin, isStart);
+            input.m_Right = RotateSegment(input.m_Right, ref matrix, origin, isStart);
+            input.m_Middle = RotateBezier4x3(input.m_Middle, ref matrix, origin, isStart);
+            input.m_Bounds = UpdateBounds3(input);
+            return input;
+        }
+
         internal static Game.Net.Segment MoveSegment(Game.Net.Segment input, float3 delta, bool? isStart = null)
         {
             input.m_Left = MoveBezier4x3(input.m_Left, delta, isStart);
             input.m_Right = MoveBezier4x3(input.m_Right, delta, isStart);
+            return input;
+        }
+
+        internal static Game.Net.Segment RotateSegment(Game.Net.Segment input, ref Matrix4x4 matrix, float3 origin, bool? isStart = null)
+        {
+            input.m_Left = RotateBezier4x3(input.m_Left, ref matrix, origin, isStart);
+            input.m_Right = RotateBezier4x3(input.m_Right, ref matrix, origin, isStart);
             return input;
         }
 

@@ -42,13 +42,6 @@ namespace QCommonLib.QAccessor
             {
                 for (int i = 0; i < buffer.Length; i++)
                 {
-                    Entity segOwner = Entity.Null;
-                    if (EntityManager.TryGetComponent(buffer[i].m_Edge, out Game.Common.Owner segOwnerData))
-                    {
-                        segOwner = segOwnerData.m_Owner;
-                    }
-                    if (!owner.Equals(segOwner)) continue;
-
                     Game.Net.Edge edge = EntityManager.GetComponentData<Game.Net.Edge>(buffer[i].m_Edge);
                     if (!e.Equals(edge.m_Start) && !e.Equals(edge.m_End)) continue;
 
@@ -109,7 +102,7 @@ namespace QCommonLib.QAccessor
         {
             Entity e = end.m_Entity;
             StringBuilder sb = new();
-            sb.AppendFormat("SegEnd.Set {0} ({1}, delta:{2}, old:{3}): ", e.D(), newPosition.DX(), delta.DX(), Position.DX());
+            sb.AppendFormat("SegEnd.Move {0} ({1}, delta:{2}, old:{3}): ", e.D(), newPosition.DX(), delta.DX(), Position.DX());
 
             Game.Net.Edge edge = EntityManager.GetComponentData<Game.Net.Edge>(e);
 
@@ -154,8 +147,56 @@ namespace QCommonLib.QAccessor
 
         public readonly bool RotateTo(float angle, ref Matrix4x4 matrix, float3 origin)
         {
-            //QLog.Debug($"Rotating node {m_Entity.DX()}");
-            return false;
+            if (!EntityManager.Exists(m_Entity)) return false;
+
+            for (int i = 0; i < m_Segments.Length; i++)
+            {
+                RotateSegmentEnd(angle, ref matrix, origin, m_Segments[i]);
+            }
+            EntityManager.AddComponent<Game.Common.Updated>(m_Entity);
+
+            return true;
+        }
+
+        private readonly bool RotateSegmentEnd(float angle, ref Matrix4x4 matrix, float3 origin, QSegmentEnd end)
+        {
+            Entity e = end.m_Entity;
+            StringBuilder sb = new();
+            sb.AppendFormat("SegEnd.Rotate {0} (angle:{1:0.##}, old:{2}): ", e.D(), angle, Position.DX());
+
+            Game.Net.Edge edge = EntityManager.GetComponentData<Game.Net.Edge>(e);
+
+            if (m_Lookup.gnCurve.HasComponent(e))
+            {
+                sb.Append($"gnCurve, ");
+                m_Lookup.gnCurve.GetRefRW(e).ValueRW.m_Bezier = QEntity.RotateBezier4x3(m_Lookup.gnCurve.GetRefRO(e).ValueRO.m_Bezier, ref matrix, origin, end.m_IsStart);
+            }
+
+            if (m_Lookup.gnEdgeGeometry.HasComponent(e))
+            {
+                sb.Append($"gnEdgeGeo, ");
+                if (end.m_IsStart) m_Lookup.gnEdgeGeometry.GetRefRW(e).ValueRW.m_Start = QEntity.RotateSegment(m_Lookup.gnEdgeGeometry.GetRefRO(e).ValueRO.m_Start, ref matrix, origin, end.m_IsStart);
+                if (!end.m_IsStart) m_Lookup.gnEdgeGeometry.GetRefRW(e).ValueRW.m_End = QEntity.RotateSegment(m_Lookup.gnEdgeGeometry.GetRefRO(e).ValueRO.m_End, ref matrix, origin, end.m_IsStart);
+                m_Lookup.gnEdgeGeometry.GetRefRW(e).ValueRW.m_Bounds = QEntity.UpdateBounds3(m_Lookup.gnEdgeGeometry.GetRefRO(e).ValueRO);//.m_Bounds, delta, end.m_IsStart);
+            }
+
+            if (!end.m_IsStart && m_Lookup.gnEndNodeGeometry.HasComponent(e))
+            {
+                sb.Append($"gnEndNodeGeo, ");
+                m_Lookup.gnEndNodeGeometry.GetRefRW(e).ValueRW.m_Geometry = QEntity.RotateEdgeNodeGeometry(m_Lookup.gnEndNodeGeometry.GetRefRO(e).ValueRO.m_Geometry, ref matrix, origin, end.m_IsStart);
+            }
+            else if (end.m_IsStart && m_Lookup.gnStartNodeGeometry.HasComponent(e))
+            {
+                sb.Append($"gnStartNodeGeo, ");
+                m_Lookup.gnStartNodeGeometry.GetRefRW(e).ValueRW.m_Geometry = QEntity.RotateEdgeNodeGeometry(m_Lookup.gnStartNodeGeometry.GetRefRO(e).ValueRO.m_Geometry, ref matrix, origin, end.m_IsStart);
+            }
+
+            EntityManager.AddComponent<Game.Common.Updated>(e);
+            EntityManager.AddComponent<Game.Common.Updated>(end.m_IsStart ? edge.m_End : edge.m_Start);
+
+            //QLog.Debug(sb.ToString());
+
+            return true;
         }
 
 
