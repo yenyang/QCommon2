@@ -59,6 +59,16 @@ namespace QCommonLib
             return $"{t.m_Position.DX()}/{t.m_Rotation.Y():0.##}";
         }
 
+        public static string D(this int2 i)
+        {
+            return $"{i.x},{i.y}";
+        }
+
+        public static string D(this float2 f)
+        {
+            return $"{f.x:0.##},{f.y:0.##}";
+        }
+
         public static string D(this float3 f)
         {
             return $"{f.x:0.##},{f.z:0.##}";
@@ -67,6 +77,16 @@ namespace QCommonLib
         public static string DX(this float3 f)
         {
             return $"{f.x:0.##},{f.y:0.##},{f.z:0.##}";
+        }
+
+        public static string D(this Quad2 q)
+        {
+            return $"({q.a.x:0.##},{q.a.y:0.##}),({q.b.x:0.##},{q.b.y:0.##}),({q.c.x:0.##},{q.c.y:0.##}),({q.d.x:0.##},{q.d.y:0.##})";
+        }
+
+        public static float2 XZ(this float3 f)
+        {
+            return new float2(f.x, f.z);
         }
 
         public static void Deconstruct<T1, T2>(this KeyValuePair<T1, T2> tuple, out T1 key, out T2 value)

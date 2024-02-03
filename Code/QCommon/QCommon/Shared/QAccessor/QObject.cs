@@ -23,6 +23,8 @@ namespace QCommonLib.QAccessor
 
     public interface IQEntity
     {
+        public Entity m_Entity { get; }
+
         public float3 Position { get; }
         public float Angle { get; }
         public quaternion Rotation { get; }
@@ -31,6 +33,11 @@ namespace QCommonLib.QAccessor
         public bool Move(float3 newPosition, float3 delta);
         public bool RotateBy(float delta, ref Matrix4x4 matrix, float3 origin);
         public bool RotateTo(float angle, ref Matrix4x4 matrix, float3 origin);
+
+        public T GetComponent<T>() where T : unmanaged, IComponentData;
+        public bool TryGetComponent<T>(out T component) where T : unmanaged, IComponentData;
+        public DynamicBuffer<T> GetBuffer<T>(bool isReadOnly = false) where T : unmanaged, IBufferElementData;
+        public bool TryGetBuffer<T>(out DynamicBuffer<T> buffer, bool isReadOnly = false) where T : unmanaged, IBufferElementData;
     }
 
     public struct QObject : IDisposable
@@ -232,6 +239,26 @@ namespace QCommonLib.QAccessor
             }
             if (field == null) throw new Exception($"Entity field not found for type {type}");
             return field;
+        }
+
+        public readonly T GetComponent<T>() where T : unmanaged, IComponentData
+        {
+            return Parent.GetComponent<T>();
+        }
+
+        public readonly bool TryGetComponent<T>(out T component) where T : unmanaged, IComponentData
+        {
+            return Parent.TryGetComponent<T>(out component);
+        }
+
+        public readonly DynamicBuffer<T> GetBuffer<T>(bool isReadOnly = false) where T : unmanaged, IBufferElementData
+        {
+            return Parent.GetBuffer<T>(isReadOnly);
+        }
+
+        public readonly bool TryGetBuffer<T>(out DynamicBuffer<T> buffer, bool isReadOnly = false) where T : unmanaged, IBufferElementData
+        {
+            return Parent.TryGetBuffer<T>(out buffer, isReadOnly);
         }
         #endregion
 

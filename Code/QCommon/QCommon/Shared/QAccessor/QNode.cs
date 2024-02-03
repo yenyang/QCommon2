@@ -1,5 +1,4 @@
-﻿using Colossal.Entities;
-using System;
+﻿using System;
 using System.Text;
 using Unity.Collections;
 using Unity.Entities;
@@ -18,7 +17,7 @@ namespace QCommonLib.QAccessor
     {
         internal readonly EntityManager EntityManager => World.DefaultGameObjectInjectionWorld.EntityManager;
 
-        public Entity m_Entity;
+        public Entity m_Entity { get; }
         internal float3 m_OriginPosition;
         internal bool m_IsTopLevel;
         internal QLookup m_Lookup;
@@ -35,10 +34,8 @@ namespace QCommonLib.QAccessor
             m_IsTopLevel = false;
             m_Type = type;
 
-            Entity owner = EntityManager.GetComponentData<Game.Common.Owner>(e).m_Owner;
-
             m_Segments = new NativeList<QSegmentEnd>(0, Allocator.Persistent);
-            if (EntityManager.TryGetBuffer<Game.Net.ConnectedEdge>(e, true, out var buffer))
+            if (TryGetBuffer<Game.Net.ConnectedEdge>(out var buffer, true))
             {
                 for (int i = 0; i < buffer.Length; i++)
                 {
@@ -196,6 +193,41 @@ namespace QCommonLib.QAccessor
 
             //QLog.Debug(sb.ToString());
 
+            return true;
+        }
+
+
+        public readonly T GetComponent<T>() where T : unmanaged, IComponentData
+        {
+            return EntityManager.GetComponentData<T>(m_Entity);
+        }
+
+        public readonly bool TryGetComponent<T>(out T component) where T : unmanaged, IComponentData
+        {
+            if (!EntityManager.HasComponent<T>(m_Entity))
+            {
+                component = default;
+                return false;
+            }
+
+            component = EntityManager.GetComponentData<T>(m_Entity);
+            return true;
+        }
+
+        public readonly DynamicBuffer<T> GetBuffer<T>(bool isReadOnly = false) where T : unmanaged, IBufferElementData
+        {
+            return EntityManager.GetBuffer<T>(m_Entity, isReadOnly);
+        }
+
+        public readonly bool TryGetBuffer<T>(out DynamicBuffer<T> buffer, bool isReadOnly = false) where T : unmanaged, IBufferElementData
+        {
+            if (!EntityManager.HasBuffer<T>(m_Entity))
+            {
+                buffer = default;
+                return false;
+            }
+
+            buffer = EntityManager.GetBuffer<T>(m_Entity, isReadOnly);
             return true;
         }
 
