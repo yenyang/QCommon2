@@ -29,7 +29,7 @@ namespace QCommonLib.QAccessor
         public float Angle { get; }
         public quaternion Rotation { get; }
 
-        public bool MoveBy(float3 delta);
+        public bool MoveBy(float3 newPosition, float3 delta);
         public bool Move(float3 newPosition, float3 delta);
         public bool RotateBy(float delta, ref Matrix4x4 matrix, float3 origin);
         public bool RotateTo(float angle, ref Matrix4x4 matrix, float3 origin);
@@ -40,6 +40,9 @@ namespace QCommonLib.QAccessor
         public bool TryGetBuffer<T>(out DynamicBuffer<T> buffer, bool isReadOnly = false) where T : unmanaged, IBufferElementData;
     }
 
+    /// <summary>
+    /// Primary accessor for entities, including children
+    /// </summary>
     public struct QObject : IDisposable
     {
         internal readonly EntityManager EM => World.DefaultGameObjectInjectionWorld.EntityManager;
@@ -112,24 +115,24 @@ namespace QCommonLib.QAccessor
             RotateTo(angle);
         }
 
-        public void MoveBy(float3 delta)
+        public void MoveTo(float3 newPosition)
         {
-            Parent.MoveBy(delta);
+            MoveBy(newPosition, newPosition - Parent.Position);
+        }
+
+        public void MoveBy(float3 newPosition, float3 delta)
+        {
+            Parent.MoveBy(newPosition, delta);
 
             for (int i = 0; i < m_ChildNodes.Length; i++)
             {
-                m_ChildNodes[i].MoveBy(delta);
+                m_ChildNodes[i].MoveBy(newPosition, delta);
             }
 
             for (int i = 0; i < m_Children.Length; i++)
             {
-                m_Children[i].MoveBy(delta);
+                m_Children[i].MoveBy(newPosition,delta);
             }
-        }
-
-        public void MoveTo(float3 newPosition)
-        {
-            MoveBy(newPosition - Parent.Position);
         }
 
         public void RotateTo(float newAngle)

@@ -13,6 +13,9 @@ namespace QCommonLib.QAccessor
         public bool m_IsStart;
     }
 
+    /// <summary>
+    /// Actual accessor for entities, specifically nodes
+    /// </summary>
     public struct QNode : IQEntity, IDisposable
     {
         internal readonly EntityManager EntityManager => World.DefaultGameObjectInjectionWorld.EntityManager;
@@ -33,6 +36,11 @@ namespace QCommonLib.QAccessor
             m_OriginPosition = float.MaxValue;
             m_IsTopLevel = false;
             m_Type = type;
+
+            if (!TryGetComponent<Game.Net.Node>(out _))
+            {
+                return;
+            }
 
             m_Segments = new NativeList<QSegmentEnd>(0, Allocator.Persistent);
             if (TryGetBuffer<Game.Net.ConnectedEdge>(out var buffer, true))
@@ -77,9 +85,9 @@ namespace QCommonLib.QAccessor
         }
 
 
-        public readonly bool MoveBy(float3 delta)
+        public readonly bool MoveBy(float3 newPosition, float3 delta)
         {
-            return Move(Position + delta, delta);
+            return Move(newPosition, delta);
         }
 
         public readonly bool Move(float3 newPosition, float3 delta)
@@ -146,6 +154,7 @@ namespace QCommonLib.QAccessor
         {
             if (!EntityManager.Exists(m_Entity)) return false;
 
+            QLog.Debug($"QNode.RotTo {m_Entity}/{m_Segments.Length} angle:{angle}");
             for (int i = 0; i < m_Segments.Length; i++)
             {
                 RotateSegmentEnd(angle, ref matrix, origin, m_Segments[i]);

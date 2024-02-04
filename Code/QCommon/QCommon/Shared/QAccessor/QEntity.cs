@@ -6,6 +6,9 @@ using UnityEngine;
 
 namespace QCommonLib.QAccessor
 {
+    /// <summary>
+    /// Actual accessor for entities, excluding nodes
+    /// </summary>
     public struct QEntity : IQEntity
     {
         internal readonly EntityManager EntityManager => World.DefaultGameObjectInjectionWorld.EntityManager;
@@ -166,9 +169,9 @@ namespace QCommonLib.QAccessor
         }
 
 
-        public readonly bool MoveBy(float3 delta)
+        public readonly bool MoveBy(float3 newPosition, float3 delta)
         {
-            return Move(Position + delta, delta);
+            return Move(newPosition, delta);
         }
 
         public readonly bool Move(float3 newPosition, float3 delta)

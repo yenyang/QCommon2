@@ -1,27 +1,29 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using Unity.Collections;
+using Unity.Entities.UniversalDelegates;
 using Unity.Jobs;
 
 namespace QCommonLib
 {
-    public struct QNativeArray<T> : IDisposable, INativeDisposable, IEnumerable<T> where T : unmanaged, IDisposable
+    public struct QNativeList<T> : IDisposable, INativeDisposable, IEnumerable<T> where T : unmanaged, IDisposable//, INativeDisposable
     {
         /// <summary>
-        /// Whether or not the array has valid elements. Different from m_Buffer.IsCreated in that IsCreated only considers if the array has been created.
+        /// Whether or not the list has valid elements. Different from m_Buffer.IsCreated in that IsCreated only considers if the list has been created.
         /// Note: Assumes that if any element is valid, all elements are valid.
         /// </summary>
         internal bool m_Active;
         /// <summary>
-        /// The actual native array.
+        /// The actual native list.
         /// </summary>
-        internal NativeArray<T> m_Array;
+        internal NativeList<T> m_List;
         /// <summary>
-        /// The number of elements that the array can contain.
+        /// The number of elements that the list can contain.
         /// Note: Does not mean these elements have been created.
         /// </summary>
-        internal int Length => m_Array.Length;
+        internal readonly int Length => m_List.Length;
         /// <summary>
         /// The allocator is saved so it can be read back during debugging.
         /// </summary>
@@ -30,11 +32,11 @@ namespace QCommonLib
         /// <summary>
         /// Constructor, creates actual array.
         /// </summary>
-        public QNativeArray(int length, Allocator allocator = Allocator.TempJob)
+        public QNativeList(int length, Allocator allocator = Allocator.TempJob)
         {
             m_Allocator = allocator;
             m_Active = true;
-            m_Array = new(length, allocator);
+            m_List = new(length, allocator);
         }
 
         /// <summary>
@@ -49,19 +51,28 @@ namespace QCommonLib
             {
                 if (!m_Active)
                 {
-                    throw new Exception($"Attempting to get element {i} in non-active NativeArray");
+                    throw new Exception($"Attempting to get element {i} in non-active NativeList");
                 }
-                return m_Array[i];
+                return m_List[i];
             }
             set
             {
-                if (!m_Array.IsCreated)
+                if (!m_List.IsCreated)
                 {
-                    throw new Exception($"Attempting to set element {i} in non-created NativeArray");
+                    throw new Exception($"Attempting to set element {i} in non-created NativeList");
                 }
                 m_Active = true;
-                m_Array[i] = value;
+                m_List[i] = value;
             }
+        }
+
+        /// <summary>
+        /// Append an element to the end of the list
+        /// </summary>
+        /// <param name="element">The element to add</param>
+        public void Add(T element)
+        {
+            m_List.Add(element);
         }
 
         /// <summary>
@@ -74,9 +85,9 @@ namespace QCommonLib
             {
                 for (int i = 0; i < Length; i++)
                 {
-                    m_Array[i].Dispose();
+                    m_List[i].Dispose();
                 }
-                m_Array.Dispose();
+                m_List.Dispose();
                 m_Active = false;
             }
         }
@@ -89,14 +100,17 @@ namespace QCommonLib
         {
             if (m_Active)
             {
-                if (m_Array.Length > 0 && m_Array[0] is INativeDisposable)
+                // We don't know if the elements are INativeDisposable and casting will cause a d
+                if (m_List.Length > 0 && m_List[0] is INativeDisposable)
                 {
+                    //MethodInfo method = m_List[0].GetType().GetMethod("Dispose", new Type[] { typeof(JobHandle) });
                     for (int i = 0; i < Length; i++)
                     {
-                        handle = ((INativeDisposable)m_Array[i]).Dispose(handle);
+                        //handle = (JobHandle)method.Invoke(m_List[i], new object[] { handle });
+                        handle = ((INativeDisposable)m_List[i]).Dispose(handle);
                     }
                 }
-                handle = m_Array.Dispose(handle);
+                handle = m_List.Dispose(handle);
                 m_Active = false;
             }
             return handle;
@@ -108,14 +122,14 @@ namespace QCommonLib
         private class Enumeration : IEnumerator<T>
         {
             private int _Position = -1;
-            private QNativeArray<T> _Array;
+            private QNativeList<T> _List;
 
-            public Enumeration(QNativeArray<T> a)
+            public Enumeration(QNativeList<T> a)
             {
-                _Array = a;
+                _List = a;
             }
 
-            public T Current => _Array[_Position];
+            public T Current => _List[_Position];
 
             object IEnumerator.Current => Current;
 
@@ -125,7 +139,7 @@ namespace QCommonLib
             public bool MoveNext()
             {
                 _Position++;
-                return (_Position < _Array.Length);
+                return (_Position < _List.Length);
             }
 
             public void Reset()
