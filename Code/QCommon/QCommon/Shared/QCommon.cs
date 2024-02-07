@@ -1,6 +1,8 @@
 ﻿using Colossal.Entities;
+using Colossal.Mathematics;
 using Game.Prefabs;
 using Game.Tools;
+using System;
 using System.Diagnostics;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -9,13 +11,6 @@ namespace QCommonLib
 {
     public class QCommon
     {
-        //public static float3 Float3Invalid()
-        //{
-        //    float3 f = new();
-        //    f.SetInvalid();
-        //    return f;
-        //}
-
         public static long ElapsedMilliseconds(long startTime)
         {
             long elapsed = math.abs(Stopwatch.GetTimestamp() - startTime);
@@ -76,6 +71,42 @@ namespace QCommonLib
             }
 
             return name;
+        }
+
+        // Thanks to vladibo on the Unity forum
+        public static int IntersectionsBetweenLineAndCircle(Circle2 circle, Line2 line, out float2 intersect1, out float2 intersect2)
+        {
+            float t;
+            float2 magnitude = line.b - line.a;
+
+            var a = magnitude.x * magnitude.x + magnitude.y * magnitude.y;
+            var b = 2 * (magnitude.x * (line.a.x - circle.position.x) + magnitude.y * (line.a.y - circle.position.y));
+            var c = (line.a.x - circle.position.x) * (line.a.x - circle.position.x) + (line.a.y - circle.position.y) * (line.a.y - circle.position.y) - circle.radius * circle.radius;
+
+            var determinate = b * b - 4 * a * c;
+            if ((a <= 0.0000001) || (determinate < -0.0000001))
+            {
+                // No real solutions.
+                intersect1 = float2.zero;
+                intersect2 = float2.zero;
+                return 0;
+            }
+            if (determinate < 0.0000001 && determinate > -0.0000001)
+            {
+                // One solution.
+                t = -b / (2 * a);
+                intersect1 = new float2(line.a.x + t * magnitude.x, line.a.y + t * magnitude.y);
+                intersect2 = float2.zero;
+                return 1;
+            }
+
+            // Two solutions.
+            t = (float)((-b + Math.Sqrt(determinate)) / (2 * a));
+            intersect1 = new float2(line.a.x + t * magnitude.x, line.a.y + t * magnitude.y);
+            t = (float)((-b - Math.Sqrt(determinate)) / (2 * a));
+            intersect2 = new float2(line.a.x + t * magnitude.x, line.a.y + t * magnitude.y);
+
+            return 2;
         }
     }
 }

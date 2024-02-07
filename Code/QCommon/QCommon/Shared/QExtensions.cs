@@ -111,6 +111,15 @@ namespace QCommonLib
             return a;
         }
 
+        public static Bounds2 Encapsulate(this Bounds2 a, Bounds2 b)
+        {
+            a.min.x = Math.Min(a.min.x, b.min.x);
+            a.min.y = Math.Min(a.min.y, b.min.y);
+            a.max.x = Math.Max(a.max.x, b.max.x);
+            a.max.y = Math.Max(a.max.y, b.max.y);
+            return a;
+        }
+
         public static Bounds3 Expand(this Bounds3 b, float3 size)
         {
             return new Bounds3(

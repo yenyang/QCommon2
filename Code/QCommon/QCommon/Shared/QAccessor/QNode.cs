@@ -154,7 +154,7 @@ namespace QCommonLib.QAccessor
         {
             if (!EntityManager.Exists(m_Entity)) return false;
 
-            QLog.Debug($"QNode.RotTo {m_Entity}/{m_Segments.Length} angle:{angle}");
+            //QLog.Debug($"QNode.RotTo {m_Entity}/{m_Segments.Length} angle:{angle}");
             for (int i = 0; i < m_Segments.Length; i++)
             {
                 RotateSegmentEnd(angle, ref matrix, origin, m_Segments[i]);
