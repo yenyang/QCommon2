@@ -9,7 +9,7 @@
     <Import_RootNamespace>QCommonLib</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)QAccessor\QItem.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)QAccessor\QObjectSimple.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QAccessor\QLookup.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QAccessor\QNode.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QByType.cs" />

@@ -6,14 +6,14 @@ namespace QCommonLib.QAccessor
     /// <summary>
     /// Additional accessor for entities, does not include children
     /// </summary>
-    public struct QItem : IDisposable
+    public struct QObjectSimple : IDisposable
     {
         public Entity m_Entity;
         public QEntity m_Parent;
         public QNode m_ParentNode;
         internal QTypes.Types m_Type;
 
-        internal QItem(Entity e, SystemBase system)
+        internal QObjectSimple(Entity e, SystemBase system)
         {
             if (e == Entity.Null) throw new ArgumentNullException("Creating QObject with null entity");
 
