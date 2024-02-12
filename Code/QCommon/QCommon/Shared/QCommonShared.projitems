@@ -16,6 +16,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)QCommon.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QAccessor\QEntity.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)QIntersect.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QKeyboard.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QKeyListener.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QLogger.cs" />

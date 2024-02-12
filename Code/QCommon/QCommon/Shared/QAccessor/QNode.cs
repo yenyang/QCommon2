@@ -58,6 +58,13 @@ namespace QCommonLib.QAccessor
                     m_Segments.Add(end);
                 }
             }
+
+            //string msg = $"Node {m_Entity.D()} has {m_Segments.Length} segments";
+            //for (int i = 0; i < m_Segments.Length; i++)
+            //{
+            //    msg += $"\n    {m_Segments[i].m_Entity.DX()}";
+            //}
+            //QLog.Bundle("NODE", msg);
         }
 
 

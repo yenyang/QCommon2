@@ -6,6 +6,7 @@ using System.Text;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
+using static MoveIt.Overlays.Utils;
 
 namespace QCommonLib
 {
@@ -143,6 +144,15 @@ namespace QCommonLib
             result.value.z = (0f - q.value.z) * num2;
             result.value.w = q.value.w * num2;
             return result;
+        }
+
+        public static Quad3 ToQuad3(this Bounds3 b)
+        {
+            return new(
+                new(b.min.x, b.min.y, b.min.z),
+                new(b.max.x, b.min.y, b.min.z),
+                new(b.max.x, b.max.y, b.max.z),
+                new(b.min.x, b.max.y, b.max.z));
         }
 
         public static float3 Lerp(this float3 a, float3 b, float t)
