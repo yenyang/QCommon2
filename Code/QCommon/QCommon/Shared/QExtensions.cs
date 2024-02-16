@@ -27,6 +27,11 @@ namespace QCommonLib
             return new float2(x, y);
         }
 
+        public static float Center(this Bounds1 bounds)
+        {
+            return bounds.min + (bounds.max - bounds.min) / 2;;
+        }
+
         public static float2 Center2D(this Bounds3 bounds)
         {
             float x = bounds.x.min + (bounds.x.max - bounds.x.min) / 2;

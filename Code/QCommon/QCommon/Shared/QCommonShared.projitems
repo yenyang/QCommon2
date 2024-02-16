@@ -9,21 +9,15 @@
     <Import_RootNamespace>QCommonLib</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)QAccessor\QObjectSimple.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)QAccessor\QLookup.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)QAccessor\QNode.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QByType.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QCommon.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)QAccessor\QEntity.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QIntersect.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QKeyboard.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QKeyListener.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QLogger.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)QAccessor\QObject.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QNativeArray.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QNativeList.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QTimer.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)QTypes.cs" />
   </ItemGroup>
 </Project>
