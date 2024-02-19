@@ -43,22 +43,6 @@ namespace QCommonLib
             return $"E{e.Index}.{e.Version}";
         }
 
-        public static string DX(this Entity e)
-        {
-            EntityManager em = World.DefaultGameObjectInjectionWorld.EntityManager;
-
-            char type;
-            if (em.HasComponent<Game.Buildings.Building>(e))    type = 'B';
-            else if (em.HasComponent<Game.Objects.Plant>(e))    type = 'P';
-            else if (em.HasComponent<Game.Net.Node>(e))         type = 'N';
-            else if (em.HasComponent<Game.Net.Edge>(e))         type = 'S';
-            else if (em.HasComponent<Game.Objects.Static>(e) 
-                && em.HasComponent<Game.Objects.NetObject>(e))  type = 'R';
-            else                                                type = '?';
-
-            return $"E{e.Index}.{e.Version}/{type} (\"{QCommon.GetPrefabName(em, e)}\")";
-        }
-
         public static string D(this Game.Objects.Transform t)
         {
             return $"{t.m_Position.DX()}/{t.m_Rotation.Y():0.##}";

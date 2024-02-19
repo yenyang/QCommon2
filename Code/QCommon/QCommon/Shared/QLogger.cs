@@ -183,7 +183,7 @@ namespace QCommonLib
         public override void Error(Exception exception, string code = "")
         {
             string message = exception.ToString();
-            if (exception.StackTrace is null || exception.StackTrace == "") message += NL + new StackTrace().ToString();
+            if (!(exception.StackTrace is null || exception.StackTrace == "")) message += NL + new StackTrace().ToString();
             Do(message, LogLevel.Error, code);
         }
         #endregion
@@ -318,7 +318,7 @@ namespace QCommonLib
             if (_MirrorToStatic) QLog.Error(exception, code);
             if (code != string.Empty) code += " ";
             string message = exception.ToString();
-            if (exception.StackTrace is null || exception.StackTrace == string.Empty) message += NL + new StackTrace().ToString();
+            if (!(exception.StackTrace is null || exception.StackTrace == string.Empty)) message += NL + new StackTrace().ToString();
             Logger.Error(code + message + NL);
         }
         #endregion

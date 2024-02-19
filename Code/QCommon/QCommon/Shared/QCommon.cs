@@ -55,7 +55,7 @@ namespace QCommonLib
         {
             if (Manager.TryGetComponent(e, out PrefabRef prefab))
             {
-                return QCommon.PrefabSystem.GetPrefab<PrefabBase>(prefab);
+                return PrefabSystem.GetPrefab<PrefabBase>(prefab);
             }
 
             return null;
@@ -63,12 +63,20 @@ namespace QCommonLib
 
         public static string GetPrefabName(EntityManager Manager, Entity e)
         {
-            string name = Manager.GetName(e);
+            if (e.Equals(Entity.Null)) return "ENTITY.NULL0";
+            if (!Manager.HasComponent<PrefabRef>(e)) return "ENTITY.NULL1";
+            PrefabRef prefabRef = Manager.GetComponentData<PrefabRef>(e);
+            if (prefabRef.m_Prefab.Equals(Entity.Null)) return "ENTITY.NULL2";
 
-            PrefabBase prefabBase = QCommon.GetPrefab(Manager, e);
+            string name;
+            PrefabBase prefabBase = PrefabSystem.GetPrefab<PrefabBase>(prefabRef);
             if (prefabBase != null)
             {
                 name = prefabBase.prefab ? prefabBase.prefab.name : prefabBase.name;
+            }
+            else
+            {
+                name = Manager.GetName(e);
             }
 
             return name;
