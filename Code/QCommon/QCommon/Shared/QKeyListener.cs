@@ -90,9 +90,9 @@ namespace QCommonLib
 
     internal class QKeyListener : MonoBehaviour
     {
-        private List<QKeyEventAction> actions = new List<QKeyEventAction>();
+        private readonly List<QKeyEventAction> _Actions = new();
 
-        private QKeyEventAction clicked = null;
+        private QKeyEventAction _Clicked = null;
 
         public delegate void Trigger();
         public ToolBaseSystem m_tool = null;
@@ -104,16 +104,16 @@ namespace QCommonLib
 
         internal void RegisterKeyAction(QKeyEventAction key)
         {
-            actions.Add(key);
+            _Actions.Add(key);
         }
 
         public void OnGUI()
         {
-            foreach (QKeyEventAction action in actions)
+            foreach (QKeyEventAction action in _Actions)
             {
                 if (action.IsPressed())
                 {
-                    clicked = action;
+                    _Clicked = action;
                     break;
                 }
             }
@@ -121,10 +121,10 @@ namespace QCommonLib
 
         public void Update()
         {
-            if (clicked != null)
+            if (_Clicked != null)
             {
-                clicked.m_trigger();
-                clicked = null;
+                _Clicked.m_trigger();
+                _Clicked = null;
             }
         }
     }
