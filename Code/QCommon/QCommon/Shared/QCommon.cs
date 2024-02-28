@@ -1,10 +1,9 @@
 ﻿using Colossal.Entities;
-using Colossal.Mathematics;
 using Game.Prefabs;
 using Game.Tools;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 
@@ -80,6 +79,13 @@ namespace QCommonLib
             }
 
             return name;
+        }
+
+        public static Allocator GetAllocator(object foo)
+        {
+            FieldInfo field = foo.GetType().GetField("m_AllocatorLabel", BindingFlags.Instance | BindingFlags.NonPublic);
+            if (field is null) return Allocator.Invalid;
+            return (Allocator)field.GetValue(foo);
         }
     }
 }

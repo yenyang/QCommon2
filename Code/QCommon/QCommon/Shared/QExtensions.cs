@@ -60,12 +60,12 @@ namespace QCommonLib
 
         public static string D(this float3 f)
         {
-            return $"{f.x:0.##},{f.z:0.##}";
+            return $"{f.x:0.0},{f.z:0.0}";
         }
 
         public static string DX(this float3 f)
         {
-            return $"{f.x:0.##},{f.y:0.##},{f.z:0.##}";
+            return $"{f.x,7:0.00},{f.y,7:0.00},{f.z,7:0.00}";
         }
 
         public static string D(this Quad2 q)
