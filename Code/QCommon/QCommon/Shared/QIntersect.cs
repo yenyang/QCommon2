@@ -1,7 +1,6 @@
 ﻿using Colossal.Mathematics;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Unity.Mathematics;
 
 namespace QCommonLib
@@ -26,12 +25,12 @@ namespace QCommonLib
             float heightB = 0f;
             if (hits > 0)
             {
-                heightA = GetLineHeightAtPoint(line, a);
+                heightA = GetLineHeightAtPoint(line, a.x);
             }
             if (hits > 1)
             {
-                heightA = GetLineHeightAtPoint(line, a);
-                heightB = GetLineHeightAtPoint(line, b);
+                heightA = GetLineHeightAtPoint(line, a.x);
+                heightB = GetLineHeightAtPoint(line, b.x);
                 if (heightB > heightA)
                 {
                     (heightB, heightA) = (heightA, heightB);
@@ -63,6 +62,12 @@ namespace QCommonLib
             return result;
         }
 
+        /// <summary>
+        /// Get the part of a line that is between the two heights in bounds.
+        /// </summary>
+        /// <param name="line">The line to slice</param>
+        /// <param name="bounds">The bottom (min) and top (max) of the desired slice</param>
+        /// <returns></returns>
         public static Line3.Segment GetLineHorizontalSlice(Line3.Segment line, Bounds1 bounds)
         {
             if (line.a.y == line.b.y) line.b.y -= 1; // Fudge the numbers if the line is truly horizontal
@@ -78,12 +83,39 @@ namespace QCommonLib
             return new(a, b);
         }
 
-        public static float GetLineHeightAtPoint(Line3.Segment line, float2 xz)
+        /// <summary>
+        /// Get the height of a line at a given X coordinate
+        /// </summary>
+        /// <param name="line">The line to test</param>
+        /// <param name="x">The X coordinate on the world scale</param>
+        /// <returns></returns>
+        public static float GetLineHeightAtPoint(Line3.Segment line, float x)
         {
             float3 mag = line.b - line.a;
-            float distX = xz.x - line.a.x;
+            float distX = x - line.a.x;
             float distY = mag.y * (distX / mag.x);
             return line.a.y + distY;
+        }
+
+        public static bool GetLinesIntersection(Line2 line1, Line2 line2, out float2 point)
+        {
+            point = default;
+            float a1 = line1.b.y - line1.a.y;
+            float b1 = line1.a.x - line1.b.x;
+            float c1 = a1 * line1.a.x + b1 * line1.a.y;
+
+            float a2 = line2.b.y - line2.a.y;
+            float b2 = line2.a.x - line2.b.x;
+            float c2 = a2 * line2.a.x + b2 * line2.a.y;
+
+            float delta = a1 * b2 - a2 * b1;
+            if (delta > -1 && delta < 1)
+            {
+                return false;
+            }
+            point.x = (b2 * c1 - b1 * c2) / delta;
+            point.y = (a1 * c2 - a2 * c1) / delta;
+            return true;
         }
 
         public static Line3.Segment GetLinePart(Line3.Segment line, float cutStart, float cutEnd)
@@ -92,6 +124,21 @@ namespace QCommonLib
             float start = cutStart / math.length(mag);
             float end = cutEnd / math.length(mag);
             return new(line.a + (mag * start), line.a + (mag * end));
+        }
+
+        public static float IntersectionsBetweenLineAndCircleCut(Circle2 circle, Line3.Segment line3, bool isCircleAtStart)
+        {
+            return IntersectionsBetweenLineAndCircleCut(circle, new Line2(line3.a.XZ(), line3.b.XZ()), isCircleAtStart);
+        }
+
+        public static float IntersectionsBetweenLineAndCircleCut(Circle2 circle, Line2 line, bool isCircleAtStart)
+        {
+            float result = 0;
+            if (IntersectionsBetweenLineAndCircle(circle, line, out float2 a, out float2 _) > 0)
+            {
+                result = math.distance(a, isCircleAtStart ? line.a : line.b);
+            }
+            return result;
         }
 
         // Thanks to vladibo on the Unity forum

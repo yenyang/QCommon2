@@ -38,6 +38,83 @@ namespace QCommonLib
             return new float2(x, z);
         }
 
+        public static float3 Position(this Bezier4x3 bezier)
+        {
+            float3 total = bezier.b + bezier.c;
+            return total / 2;
+            //float3 total = bezier.a + bezier.b + bezier.c + bezier.d;
+            //return total / 4;
+        }
+
+        public static float2 Position2D(this Bezier4x3 bezier)
+        {
+            float3 pos = Position(bezier);
+            return new(pos.x, pos.z);
+        }
+
+        public static float3 Get(this Bezier4x3 curve, short idx)
+        {
+            return idx switch
+            {
+                0 => curve.a,
+                1 => curve.b,
+                2 => curve.c,
+                3 => curve.d,
+                _ => throw new Exception($"Invalid Bezier curve key get '{idx}'")
+            };
+        }
+
+        public static void Set(ref this Bezier4x3 curve, short idx, float3 val)
+        {
+            switch (idx)
+            {
+                case 0:
+                    curve.a = val;
+                    break;
+                case 1:
+                    curve.b = val;
+                    break;
+                case 2:
+                    curve.c = val;
+                    break;
+                case 3:
+                    curve.d = val;
+                    break;
+                case 4:
+                    throw new Exception($"Invalid Bezier curve key set '{idx}'");
+            }
+        }
+
+        public static bool IsNodeA(this short idx)
+        {
+            if (idx < 2) return true;
+            return false;
+        }
+
+        public static bool IsNodeB(this short idx)
+        {
+            if (idx > 1 && idx <= 3) return true;
+            return false;
+        }
+
+        public static bool IsEnding(this short idx)
+        {
+            if (idx == 0 || idx == 3) return true;
+            return false;
+        }
+
+        public static bool IsMiddle(this short idx)
+        {
+            if (idx == 1 || idx == 2) return true;
+            return false;
+        }
+
+        public static bool IsMeta(this short idx)
+        {
+            if (idx == 4) return true;
+            return false;
+        }
+
         public static string D(this Entity e)
         {
             return $"E{e.Index}.{e.Version}";
@@ -65,7 +142,7 @@ namespace QCommonLib
 
         public static string DX(this float3 f)
         {
-            return $"{f.x,7:0.00},{f.y,7:0.00},{f.z,7:0.00}";
+            return $"{f.x:0.00},{f.y:0.00},{f.z:0.00}";
         }
 
         public static string D(this Quad2 q)
