@@ -1,4 +1,5 @@
-﻿using Game.Tools;
+﻿using Game.Input;
+using Game.Tools;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -109,6 +110,8 @@ namespace QCommonLib
 
         public void OnGUI()
         {
+            if (!InputManager.instance.controlOverWorld) return;
+
             foreach (QKeyEventAction action in _Actions)
             {
                 if (action.IsPressed())

@@ -97,7 +97,7 @@ namespace QCommonLib
             return false;
         }
 
-        public static bool IsEnding(this short idx)
+        public static bool IsEnd(this short idx)
         {
             if (idx == 0 || idx == 3) return true;
             return false;
