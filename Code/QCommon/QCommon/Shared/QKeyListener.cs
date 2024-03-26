@@ -1,4 +1,4 @@
-﻿using Game.Input;
+﻿using Game.SceneFlow;
 using Game.Tools;
 using System.Collections.Generic;
 using UnityEngine;
@@ -110,7 +110,14 @@ namespace QCommonLib
 
         public void OnGUI()
         {
-            if (!InputManager.instance.controlOverWorld) return;
+            try
+            {
+                if (!GameManager.instance.inputManager.controlOverWorld) return;
+            }
+            catch
+            {
+                return;
+            }
 
             foreach (QKeyEventAction action in _Actions)
             {
