@@ -122,7 +122,6 @@ namespace QCommonLib
         {
             Timer = Stopwatch.StartNew();
             LogFile = Path.Combine(Path.GetDirectoryName(Application.consoleLogPath), "Logs", AssemblyName + "_debug.log");
-            _BundledMsgs = new();
 
             if (File.Exists(LogFile))
             {
@@ -353,6 +352,7 @@ namespace QCommonLib
             AssemblyObject = Assembly.GetCallingAssembly() ?? throw new ArgumentNullException("QLogger: Failed to find calling assembly");
             m_TimezoneOffset = GetTimezoneOffset();
             IsDebug = isDebug;
+            _BundledMsgs = new();
         }
 
         public abstract void Debug(string message, string code = "");
