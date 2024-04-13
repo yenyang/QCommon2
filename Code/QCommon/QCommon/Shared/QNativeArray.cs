@@ -102,37 +102,40 @@ namespace QCommonLib
             return handle;
         }
 
-        #region Enumeration
-        public IEnumerator<T> GetEnumerator() => new Enumeration(this);
-        IEnumerator IEnumerable.GetEnumerator() => new Enumeration(this);
-        private class Enumeration : IEnumerator<T>
-        {
-            private int _Position = -1;
-            private QNativeArray<T> _Array;
+        public IEnumerator<T> GetEnumerator() => m_Array.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-            public Enumeration(QNativeArray<T> a)
-            {
-                _Array = a;
-            }
+        //#region Enumeration
+        //public IEnumerator<T> GetEnumerator() => new Enumeration(this);
+        //IEnumerator IEnumerable.GetEnumerator() => new Enumeration(this);
+        //private class Enumeration : IEnumerator<T>
+        //{
+        //    private int _Position = -1;
+        //    private QNativeArray<T> _Array;
 
-            public T Current => _Array[_Position];
+        //    public Enumeration(QNativeArray<T> a)
+        //    {
+        //        _Array = a;
+        //    }
 
-            object IEnumerator.Current => Current;
+        //    public T Current => _Array[_Position];
 
-            public void Dispose()
-            { }
+        //    object IEnumerator.Current => Current;
 
-            public bool MoveNext()
-            {
-                _Position++;
-                return (_Position < _Array.Length);
-            }
+        //    public void Dispose()
+        //    { }
 
-            public void Reset()
-            {
-                _Position = -1;
-            }
-        }
-        #endregion
+        //    public bool MoveNext()
+        //    {
+        //        _Position++;
+        //        return (_Position < _Array.Length);
+        //    }
+
+        //    public void Reset()
+        //    {
+        //        _Position = -1;
+        //    }
+        //}
+        //#endregion
     }
 }

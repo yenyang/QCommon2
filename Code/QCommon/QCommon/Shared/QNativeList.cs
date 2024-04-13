@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 using Unity.Collections;
-using Unity.Entities.UniversalDelegates;
 using Unity.Jobs;
 
 namespace QCommonLib
@@ -11,7 +9,7 @@ namespace QCommonLib
     public struct QNativeList<T> : IDisposable, INativeDisposable, IEnumerable<T> where T : unmanaged, IDisposable//, INativeDisposable
     {
         /// <summary>
-        /// Whether or not the list has valid elements. Different from m_Buffer.IsCreated in that IsCreated only considers if the list has been created.
+        /// Whether or not the list has valid elements. Different from m_List.IsCreated in that IsCreated only considers if the list has been created.
         /// Note: Assumes that if any element is valid, all elements are valid.
         /// </summary>
         internal bool m_Active;
@@ -100,13 +98,11 @@ namespace QCommonLib
         {
             if (m_Active)
             {
-                // We don't know if the elements are INativeDisposable and casting will cause a d
+                // We don't know if the elements are INativeDisposable
                 if (m_List.Length > 0 && m_List[0] is INativeDisposable)
                 {
-                    //MethodInfo method = m_List[0].GetType().GetMethod("Dispose", new Type[] { typeof(JobHandle) });
                     for (int i = 0; i < Length; i++)
                     {
-                        //handle = (JobHandle)method.Invoke(m_List[i], new object[] { handle });
                         handle = ((INativeDisposable)m_List[i]).Dispose(handle);
                     }
                 }
@@ -116,37 +112,40 @@ namespace QCommonLib
             return handle;
         }
 
-        #region Enumeration
-        public IEnumerator<T> GetEnumerator() => new Enumeration(this);
-        IEnumerator IEnumerable.GetEnumerator() => new Enumeration(this);
-        private class Enumeration : IEnumerator<T>
-        {
-            private int _Position = -1;
-            private QNativeList<T> _List;
+        public IEnumerator<T> GetEnumerator() => m_List.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-            public Enumeration(QNativeList<T> a)
-            {
-                _List = a;
-            }
+        //#region Enumeration
+        //public IEnumerator<T> GetEnumerator() => new Enumeration(this);
+        //IEnumerator IEnumerable.GetEnumerator() => new Enumeration(this);
+        //private class Enumeration : IEnumerator<T>
+        //{
+        //    private int _Position = -1;
+        //    private QNativeList<T> _List;
 
-            public T Current => _List[_Position];
+        //    public Enumeration(QNativeList<T> a)
+        //    {
+        //        _List = a;
+        //    }
 
-            object IEnumerator.Current => Current;
+        //    public T Current => _List[_Position];
 
-            public void Dispose()
-            { }
+        //    object IEnumerator.Current => Current;
 
-            public bool MoveNext()
-            {
-                _Position++;
-                return (_Position < _List.Length);
-            }
+        //    public void Dispose()
+        //    { }
 
-            public void Reset()
-            {
-                _Position = -1;
-            }
-        }
-        #endregion
+        //    public bool MoveNext()
+        //    {
+        //        _Position++;
+        //        return (_Position < _List.Length);
+        //    }
+
+        //    public void Reset()
+        //    {
+        //        _Position = -1;
+        //    }
+        //}
+        //#endregion
     }
 }
