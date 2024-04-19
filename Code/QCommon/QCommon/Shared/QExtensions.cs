@@ -38,6 +38,16 @@ namespace QCommonLib
             return new float2(x, z);
         }
 
+        public static Circle2 XZ(this Circle3 circle)
+        {
+            return new Circle2(circle.radius, new(circle.position.x, circle.position.z));
+        }
+
+        public static Circle3 XYZ(this Circle2 circle, float y = 0f)
+        {
+            return new Circle3(circle.radius, new(circle.position.x, y, circle.position.y), quaternion.identity);
+        }
+
         public static float3 Position(this Bezier4x3 bezier)
         {
             float3 total = bezier.b + bezier.c;
@@ -113,6 +123,11 @@ namespace QCommonLib
         {
             if (idx == 4) return true;
             return false;
+        }
+
+        public static string D(this Color c)
+        {
+            return $"R{c.r:.00}G{c.g:.00}B{c.b:.00}A{c.a:.00}";
         }
 
         public static string D(this Entity e)
