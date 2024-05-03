@@ -401,7 +401,7 @@ namespace QCommonLib
         {
             if (count > 1)
             {
-                Debug($"*{key}* Repeated {count} times{(prevMsg.Length < 30 ? $": \"{prevMsg}\"" : "")}");
+                Debug($"*{key}* Repeated {count} times{(prevMsg.Length < 40 ? $": \"{prevMsg}\"" : "")}");
             }
         }
         #endregion

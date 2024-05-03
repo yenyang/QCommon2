@@ -331,6 +331,11 @@ namespace QCommonLib
             return angle;
         }
 
+        public static float3 ToFloat3(this float2 pos, float y)
+        {
+            return new float3(pos.x, y, pos.y);
+        }
+
         public static string ToStringNoTrace(this Exception e)
         {
             StringBuilder sb = new(e.GetType().ToString());
