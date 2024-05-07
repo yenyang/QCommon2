@@ -94,10 +94,10 @@ namespace QCommonLib
             string[] stack = Environment.StackTrace.Split('\n');
             int max = math.min(lines + 2, stack.Length);
 
-            string result = GetStackTraceLine(stack[2], 4, false);
+            string result = GetStackTraceLine(stack[2], indentSize, false);
             for (int i = 3; i < max; i++)
             {
-                result += GetStackTraceLine(stack[i], 4);
+                result += GetStackTraceLine(stack[i], indentSize);
             }
             return result;
         }

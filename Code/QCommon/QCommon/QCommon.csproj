@@ -33,22 +33,22 @@
   <ItemGroup>
     <Reference Include="Colossal.Collections, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Games\Steam\steamapps\common\Project Beverly Hills\Cities2_Data\Managed\Colossal.Collections.dll</HintPath>
+      <HintPath>C:\Games\Steam\steamapps\common\Cities Skylines II\Cities2_Data\Managed\Colossal.Collections.dll</HintPath>
     </Reference>
     <Reference Include="Colossal.Core">
-      <HintPath>C:\Games\Steam\steamapps\common\Project Beverly Hills\Cities2_Data\Managed\Colossal.Core.dll</HintPath>
+      <HintPath>C:\Games\Steam\steamapps\common\Cities Skylines II\Cities2_Data\Managed\Colossal.Core.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Colossal.Logging">
-      <HintPath>C:\Games\Steam\steamapps\common\Project Beverly Hills\Cities2_Data\Managed\Colossal.Logging.dll</HintPath>
+      <HintPath>C:\Games\Steam\steamapps\common\Cities Skylines II\Cities2_Data\Managed\Colossal.Logging.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Colossal.UI.Binding, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Games\Steam\steamapps\common\Project Beverly Hills\Cities2_Data\Managed\Colossal.UI.Binding.dll</HintPath>
+      <HintPath>C:\Games\Steam\steamapps\common\Cities Skylines II\Cities2_Data\Managed\Colossal.UI.Binding.dll</HintPath>
     </Reference>
     <Reference Include="Game">
-      <HintPath>C:\Games\Steam\steamapps\common\Project Beverly Hills\Cities2_Data\Managed\Game.dll</HintPath>
+      <HintPath>C:\Games\Steam\steamapps\common\Cities Skylines II\Cities2_Data\Managed\Game.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
@@ -60,32 +60,32 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
     <Reference Include="Unity.Burst">
-      <HintPath>C:\Games\Steam\steamapps\common\Project Beverly Hills\Cities2_Data\Managed\Unity.Burst.dll</HintPath>
+      <HintPath>C:\Games\Steam\steamapps\common\Cities Skylines II\Cities2_Data\Managed\Unity.Burst.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Collections">
-      <HintPath>C:\Games\Steam\steamapps\common\Project Beverly Hills\Cities2_Data\Managed\Unity.Collections.dll</HintPath>
+      <HintPath>C:\Games\Steam\steamapps\common\Cities Skylines II\Cities2_Data\Managed\Unity.Collections.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Entities">
-      <HintPath>C:\Games\Steam\steamapps\common\Project Beverly Hills\Cities2_Data\Managed\Unity.Entities.dll</HintPath>
+      <HintPath>C:\Games\Steam\steamapps\common\Cities Skylines II\Cities2_Data\Managed\Unity.Entities.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Mathematics">
-      <HintPath>C:\Games\Steam\steamapps\common\Project Beverly Hills\Cities2_Data\Managed\Unity.Mathematics.dll</HintPath>
+      <HintPath>C:\Games\Steam\steamapps\common\Cities Skylines II\Cities2_Data\Managed\Unity.Mathematics.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>C:\Games\Steam\steamapps\common\Project Beverly Hills\Cities2_Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>C:\Games\Steam\steamapps\common\Cities Skylines II\Cities2_Data\Managed\UnityEngine.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>C:\Games\Steam\steamapps\common\Project Beverly Hills\Cities2_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>C:\Games\Steam\steamapps\common\Cities Skylines II\Cities2_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.IMGUIModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Games\Steam\steamapps\common\Project Beverly Hills\Cities2_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
+      <HintPath>C:\Games\Steam\steamapps\common\Cities Skylines II\Cities2_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
