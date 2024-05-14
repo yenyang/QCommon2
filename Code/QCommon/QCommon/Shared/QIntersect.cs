@@ -126,17 +126,46 @@ namespace QCommonLib
             return new(line.a + (mag * start), line.a + (mag * end));
         }
 
-        public static float IntersectionsBetweenLineAndCircleCut(Circle2 circle, Line3.Segment line3, bool isCircleAtStart)
+        public static float IntersectionsBetweenLineAndCircleCut(Circle2 circle, Line3.Segment line3, bool isCircleAtStart, float fallback = 0f)
         {
-            return IntersectionsBetweenLineAndCircleCut(circle, new Line2(line3.a.XZ(), line3.b.XZ()), isCircleAtStart);
+            return IntersectionsBetweenLineAndCircleCut(circle, new Line2(line3.a.XZ(), line3.b.XZ()), isCircleAtStart, fallback);
         }
 
-        public static float IntersectionsBetweenLineAndCircleCut(Circle2 circle, Line2 line, bool isCircleAtStart)
+        public static float IntersectionsBetweenLineAndCircleCut(Circle2 circle, Line2 line, bool isCircleAtStart, float fallback = 0f)
         {
             float result = 0;
-            if (IntersectionsBetweenLineAndCircle(circle, line, out float2 a, out float2 _) > 0)
+            if (IntersectionsBetweenLineAndCircle(circle, line, out float2 a, out float2 b) > 0)
             {
-                result = math.distance(a, isCircleAtStart ? line.a : line.b);
+                if (isCircleAtStart)
+                {
+                    result = math.distance(a, line.a);
+
+                    //float invert = math.distance(a, line.b);
+                    //float maxDist = math.distance(line.a, line.b);
+                    //bool isHit = invert < maxDist;
+                    //QLog.Debug($"S C:{circle.position.D()}/{circle.radius:0.00}  L:{line.a.D(),-15}:" +
+                    //    $" {line.b.D(),-15}:" +
+                    //    $"X:{a.D()} ({IntersectionsBetweenLineAndCircle(circle, line, out float2 _, out float2 _)}),  " +
+                    //    $"dist:{result:0.##} max:{maxDist:0.##} inv:{invert:0.##}  {isHit}/{fallback}");
+
+                    // If the distance from opposite end of line is more than line length, use fallback value
+                    if (math.distance(a, line.b) > math.distance(line.a, line.b)) result = fallback;
+                }
+                else
+                {
+                    result = math.distance(b, line.b);
+
+                    //float invert = math.distance(b, line.a);
+                    //float maxDist = math.distance(line.b, line.a);
+                    //bool isHit = invert < maxDist;
+                    //QLog.Debug($"E C:{circle.position.D()}/{circle.radius:0.00}  L:{line.a.D(),-15}:" +
+                    //    $" {line.b.D(),-15}:" +
+                    //    $"X:{b.D()} ({IntersectionsBetweenLineAndCircle(circle, line, out float2 _, out float2 _)}),  " +
+                    //    $"dist:{result:0.##} max:{maxDist:0.##} inv:{invert:0.##}  {isHit}/{fallback}");
+
+                    // If the distance from opposite end of line is more than line length, use fallback value
+                    if (math.distance(b, line.a) > math.distance(line.b, line.a)) result = fallback;
+                }
             }
             return result;
         }

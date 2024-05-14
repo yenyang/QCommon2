@@ -63,20 +63,29 @@ namespace QCommonLib
 
         public static string GetPrefabName(EntityManager Manager, Entity e)
         {
-            if (e.Equals(Entity.Null)) return "ENTITY.NULL0";
-            if (!Manager.HasComponent<PrefabRef>(e)) return "ENTITY.NULL1";
+            if (e.Equals(Entity.Null))                  return "NULL-NullPrefabRef";
+            if (!Manager.Exists(e))                     return "NULL-PrefabRefNotExist";
+            if (!Manager.HasComponent<PrefabRef>(e))    return "NULL-NoPrefabRefComp";
             PrefabRef prefabRef = Manager.GetComponentData<PrefabRef>(e);
-            if (prefabRef.m_Prefab.Equals(Entity.Null)) return "ENTITY.NULL2";
+            if (prefabRef.m_Prefab.Equals(Entity.Null)) return "NULL-PrefabEntNull";
+            if (!Manager.Exists(prefabRef.m_Prefab))    return "NULL-PrefabEntExist";
 
             string name;
-            PrefabBase prefabBase = PrefabSystem.GetPrefab<PrefabBase>(prefabRef);
-            if (prefabBase != null)
+            try
             {
-                name = prefabBase.prefab ? prefabBase.prefab.name : prefabBase.name;
+                PrefabBase prefabBase = PrefabSystem.GetPrefab<PrefabBase>(prefabRef);
+                if (prefabBase != null)
+                {
+                    name = prefabBase.prefab ? prefabBase.prefab.name : prefabBase.name;
+                }
+                else
+                {
+                    name = Manager.GetName(e);
+                }
             }
-            else
+            catch
             {
-                name = Manager.GetName(e);
+                return "NULL-PrefabSysEx";
             }
 
             return name;
@@ -104,13 +113,11 @@ namespace QCommonLib
 
         private static string GetStackTraceLine(string line, int indentSize, bool nlPrefix = true)
         {
-            string nl = Environment.NewLine;
             string indent = new(' ', indentSize);
-            string result = nlPrefix ? nl : string.Empty;
-            line = line.Trim();
+            string prefix = nlPrefix ? Environment.NewLine : string.Empty;
             int hexPos = line.IndexOf("[0x");
             if (hexPos > 0) line = line.Substring(0, hexPos) + line.Substring(hexPos + 10);
-            return $"{result}{indent}{line.Trim()}";
+            return prefix + indent + line.Trim();
         }
     }
 }
