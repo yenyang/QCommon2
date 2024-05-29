@@ -129,12 +129,12 @@ namespace QCommonLib
             }
 
             AssemblyName details = AssemblyObject.GetName();
-            _IntroMessage = $"{details.Name} v{details.Version} at " + DateTime.UtcNow.ToString(new CultureInfo("en-GB")) + $" ({m_TimezoneOffset})";
+            _IntroMessage = $"{details.Name} v{details.Version} at {GetFormattedTimeNow()}";
         }
 
         ~QLoggerCustom()
         {
-            if (_HasLogged) Info($"{AssemblyName} closing (" + DateTime.UtcNow.ToString(new CultureInfo("en-GB")) + $" ({m_TimezoneOffset})");
+            if (_HasLogged) Info($"{AssemblyName} closing {GetFormattedTimeNow()}");
         }
 
         #region Debug
@@ -245,12 +245,12 @@ namespace QCommonLib
             Logger = LogManager.GetLogger(filename == string.Empty ? AssemblyName : filename);
 
             AssemblyName details = AssemblyObject.GetName();
-            Logger.Info($"{details.Name} v{details.Version} at " + DateTime.UtcNow.ToString(new CultureInfo("en-GB")) + $" ({m_TimezoneOffset})");
+            Logger.Info($"{details.Name} v{details.Version} at {GetFormattedTimeNow()}");
         }
 
         ~QLoggerCO()
         {
-            Logger.Info($"{AssemblyName} closing (" + DateTime.UtcNow.ToString(new CultureInfo("en-GB")) + $" ({m_TimezoneOffset})");
+            Logger.Info($"{AssemblyName} closing at {GetFormattedTimeNow()}");
         }
 
         #region Debug
@@ -335,10 +335,6 @@ namespace QCommonLib
         /// </summary>
         internal string NL = Environment.NewLine;
         /// <summary>
-        /// String for the timezone offset, eg "+1:00"
-        /// </summary>
-        internal static string m_TimezoneOffset;
-        /// <summary>
         /// Should debug messages be logged?
         /// </summary>
         public bool IsDebug { get; set; }
@@ -350,7 +346,6 @@ namespace QCommonLib
         public QLoggerBase(bool isDebug = false)
         {
             AssemblyObject = Assembly.GetCallingAssembly() ?? throw new ArgumentNullException("QLogger: Failed to find calling assembly");
-            m_TimezoneOffset = GetTimezoneOffset();
             IsDebug = isDebug;
             _BundledMsgs = new();
         }
@@ -406,22 +401,22 @@ namespace QCommonLib
         }
         #endregion
 
-        public static string GetTimezoneOffset()
+
+        public static string GetFormattedTimeNow()
         {
-            string offset = "Unknown";
+            string timezone = "Unknown";
             try
             {
                 TimeSpan ts = TimeZone.CurrentTimeZone.GetUtcOffset(DateTime.Now);
-                offset = string.Format("{0}:{1:D2}", ts.Hours, ts.Minutes);
+                timezone = string.Format("{0}:{1:D2}", ts.Hours, ts.Minutes);
                 if (ts.Hours > 0 || (ts.Hours == 0 && ts.Minutes > 0))
                 {
-                    offset = "+" + offset;
+                    timezone = "+" + timezone;
                 }
             }
             catch (Exception) { }
 
-            return offset;
+            return DateTime.UtcNow.ToString(new CultureInfo("en-GB")) + $" ({timezone})";
         }
-
     }
 }

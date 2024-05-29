@@ -43,23 +43,12 @@ namespace QCommonLib
             return new Circle2(circle.radius, new(circle.position.x, circle.position.z));
         }
 
-        public static Circle3 XYZ(this Circle2 circle, float y = 0f)
-        {
-            return new Circle3(circle.radius, new(circle.position.x, y, circle.position.y), quaternion.identity);
-        }
-
         public static float3 Position(this Bezier4x3 bezier)
         {
             float3 total = bezier.b + bezier.c;
             return total / 2;
             //float3 total = bezier.a + bezier.b + bezier.c + bezier.d;
             //return total / 4;
-        }
-
-        public static float2 Position2D(this Bezier4x3 bezier)
-        {
-            float3 pos = Position(bezier);
-            return new(pos.x, pos.z);
         }
 
         public static float3 Get(this Bezier4x3 curve, short idx)
@@ -116,12 +105,6 @@ namespace QCommonLib
         public static bool IsMiddle(this short idx)
         {
             if (idx == 1 || idx == 2) return true;
-            return false;
-        }
-
-        public static bool IsMeta(this short idx)
-        {
-            if (idx == 4) return true;
             return false;
         }
 
@@ -209,11 +192,6 @@ namespace QCommonLib
             );
         }
 
-        public static float4 Expand(this float4 area, float distance)
-        {
-            return new float4(area.x - distance, area.y - distance, area.z + distance, area.w + distance);
-        }
-
         public static quaternion Inverse(this quaternion q)
         {
             float num = q.value.x * q.value.x + q.value.y * q.value.y + q.value.z * q.value.z + q.value.w * q.value.w;
@@ -265,11 +243,6 @@ namespace QCommonLib
         public static float3 Min(this float3 a, float3 b)
         {
             return new(Mathf.Min(a.x, b.x), Mathf.Min(a.y, b.y), Mathf.Min(a.z, b.z));
-        }
-
-        public static quaternion Multiply(this quaternion a, quaternion b)
-        {
-            return math.normalize(math.mul(a, b));
         }
 
         public static string RemoveWhitespace(this string input)
