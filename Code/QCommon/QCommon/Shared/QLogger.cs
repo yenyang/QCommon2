@@ -121,11 +121,17 @@ namespace QCommonLib
         public QLoggerCustom(bool isDebug = true) : base(isDebug)
         {
             Timer = Stopwatch.StartNew();
-            LogFile = Path.Combine(Path.GetDirectoryName(Application.consoleLogPath), "Logs", AssemblyName + "_debug.log");
+            string fileNameBase = Path.Combine(Path.GetDirectoryName(Application.consoleLogPath), "Logs", AssemblyName + "_debug");
+            LogFile = fileNameBase + ".log";
+            string prevLogFile = fileNameBase + "-prev.log";
 
+            if (File.Exists(prevLogFile))
+            {
+                File.Delete(prevLogFile);
+            }
             if (File.Exists(LogFile))
             {
-                File.Delete(LogFile);
+                File.Move(LogFile, prevLogFile);
             }
 
             AssemblyName details = AssemblyObject.GetName();
@@ -242,7 +248,28 @@ namespace QCommonLib
         public QLoggerCO(bool isDebug = true, string filename = "", bool mirrorToStatic = true) : base(isDebug)
         {
             _MirrorToStatic = mirrorToStatic;
-            Logger = LogManager.GetLogger(filename == string.Empty ? AssemblyName : filename);
+
+            filename = filename.Equals(string.Empty) ? AssemblyName : filename;
+            string fileNameBase = Path.Combine(Path.GetDirectoryName(Application.consoleLogPath), "Logs", filename);
+            string logFile = fileNameBase + ".log";
+            string prevLogFile = fileNameBase + "-prev.log";
+            string deleteBuggedFileName = fileNameBase + ".Mod.log";
+
+            if (File.Exists(prevLogFile))
+            {
+                File.Delete(prevLogFile);
+            }
+            if (File.Exists(logFile))
+            {
+                File.Move(logFile, prevLogFile);
+            }
+            if (File.Exists(deleteBuggedFileName))
+            {
+                File.Delete(deleteBuggedFileName);
+            }
+
+            Logger = LogManager.GetLogger(filename);
+            Logger.SetEffectiveness(Level.All);
 
             AssemblyName details = AssemblyObject.GetName();
             Logger.Info($"{details.Name} v{details.Version} at {GetFormattedTimeNow()}");
