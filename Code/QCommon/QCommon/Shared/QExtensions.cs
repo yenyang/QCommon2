@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text;
 using Unity.Entities;
 using Unity.Mathematics;
-using UnityEngine;
 
 namespace QCommonLib
 {
@@ -108,7 +107,7 @@ namespace QCommonLib
             return false;
         }
 
-        public static string D(this Color c)
+        public static string D(this UnityEngine.Color c)
         {
             return $"R{c.r:.00}G{c.g:.00}B{c.b:.00}A{c.a:.00}";
         }
@@ -232,7 +231,7 @@ namespace QCommonLib
 
         public static float3 Max(this float3 a, float3 b)
         {
-            return new(Mathf.Max(a.x, b.x), Mathf.Max(a.y, b.y), Mathf.Max(a.z, b.z));
+            return new(math.max(a.x, b.x), math.max(a.y, b.y), math.max(a.z, b.z));
         }
 
         public static float3 Min(this Quad3 q)
@@ -242,7 +241,7 @@ namespace QCommonLib
 
         public static float3 Min(this float3 a, float3 b)
         {
-            return new(Mathf.Min(a.x, b.x), Mathf.Min(a.y, b.y), Mathf.Min(a.z, b.z));
+            return new(math.min(a.x, b.x), math.min(a.y, b.y), math.min(a.z, b.z));
         }
 
         public static string RemoveWhitespace(this string input)
