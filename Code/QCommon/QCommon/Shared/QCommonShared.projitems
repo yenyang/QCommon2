@@ -17,7 +17,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)QKeyListener.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QLogger.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QMinimumEnclosingCircle.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)QNativeArray.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QNativeList.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QTimer.cs" />
   </ItemGroup>

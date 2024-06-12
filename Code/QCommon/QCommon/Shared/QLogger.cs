@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
-using UnityEngine;
 
 namespace QCommonLib
 {
@@ -121,7 +120,7 @@ namespace QCommonLib
         public QLoggerCustom(bool isDebug = true) : base(isDebug)
         {
             Timer = Stopwatch.StartNew();
-            string fileNameBase = Path.Combine(Path.GetDirectoryName(Application.consoleLogPath), "Logs", AssemblyName + "_debug");
+            string fileNameBase = Path.Combine(Path.GetDirectoryName(UnityEngine.Application.consoleLogPath), "Logs", AssemblyName + "_debug");
             LogFile = fileNameBase + ".log";
             string prevLogFile = fileNameBase + "-prev.log";
 
@@ -217,14 +216,15 @@ namespace QCommonLib
                     var ticks = Timer.ElapsedTicks;
                     string msg = string.Empty;
                     if (code != string.Empty) code += " ";
-
+                    string frameCount = string.Empty;
+                    if (logLevel == LogLevel.Debug) frameCount = $"|{UnityEngine.Time.frameCount}";
 
                     long secs = ticks / Stopwatch.Frequency;
                     long fraction = ticks % Stopwatch.Frequency;
-                    string levelStr = $"[{logLevel}] ";
+                    //string levelStr = $"{logLevel}";
                     string fracStr = fraction.ToString();
                     string timeStr = $"{secs:n0}.{fracStr.Substring(0, Math.Min(fracStr.Length, 3))}";
-                    msg += $"{levelStr,-8}{timeStr, 8} | {code}{message}{NL}";
+                    msg += $"[{logLevel}|{timeStr}{frameCount}] {code}{message}{NL}";
 
                     using StreamWriter w = File.AppendText(LogFile);
                     w.Write(msg);
@@ -250,7 +250,7 @@ namespace QCommonLib
             _MirrorToStatic = mirrorToStatic;
 
             filename = filename.Equals(string.Empty) ? AssemblyName : filename;
-            string fileNameBase = Path.Combine(Path.GetDirectoryName(Application.consoleLogPath), "Logs", filename);
+            string fileNameBase = Path.Combine(Path.GetDirectoryName(UnityEngine.Application.consoleLogPath), "Logs", filename);
             string logFile = fileNameBase + ".log";
             string prevLogFile = fileNameBase + "-prev.log";
             string deleteBuggedFileName = fileNameBase + ".Mod.log";
