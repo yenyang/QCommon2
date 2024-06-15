@@ -15,6 +15,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)QIntersect.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QKeyboard.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QKeyListener.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)QKey_System.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QLogger.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QMinimumEnclosingCircle.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QNativeList.cs" />
