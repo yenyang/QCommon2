@@ -98,6 +98,11 @@ namespace QCommonLib
             return (Allocator)field.GetValue(foo);
         }
 
+        public static string GetUpdatePhase(SystemBase system)
+        {
+            return system.World.GetOrCreateSystemManaged<Game.UpdateSystem>().currentPhase.ToString();
+        }
+
         public static string GetStackTrace(int lines = 5, int indentSize = 4)
         {
             string[] stack = Environment.StackTrace.Split('\n');
