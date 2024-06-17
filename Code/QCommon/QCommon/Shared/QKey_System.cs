@@ -31,11 +31,6 @@ namespace QCommonLib
         internal QKey_System.Trigger m_Trigger;
 
         /// <summary>
-        /// Barrier to enable and disable this keybinding
-        /// </summary>
-        internal Barrier m_Barrier;
-
-        /// <summary>
         /// This keybind does not Trigger, it is read as needed
         /// </summary>
         internal bool m_IsPassive;
@@ -45,29 +40,16 @@ namespace QCommonLib
             m_Action = action;
             m_Context = context;
             m_Trigger = trigger;
-            m_Barrier = new(action, true);
             m_IsPassive = isPassive;
-        }
-
-        ~QKey_Binding()
-        {
-            m_Barrier.Dispose();
         }
 
         internal bool IsPressed => m_Action.IsPressed();
 
         internal bool Enabled
         {
-            get => !m_Barrier.blocked;
-            set => m_Barrier.blocked = !value;
+            get => m_Action.enabled;
+            set => m_Action.shouldBeEnabled = value;
         }
-
-        // For after the shouldBeEnabled bug is fixed
-        //internal bool Enabled
-        //{
-        //    get => m_Action.enabled;
-        //    set => m_Action.shouldBeEnabled = value;
-        //}
 
         internal bool WhenToolDisabled  => (m_Context & QKey_Contexts.ToolDisabled) != 0;
         internal bool WhenToolEnabled   => (m_Context & QKey_Contexts.ToolEnabled) != 0;
@@ -109,6 +91,8 @@ namespace QCommonLib
                     binding.Enabled = enabled;
                 }
             }
+
+            //DebugDumpAllBindings($"OnToolToggle {enabled}: ");
         }
 
         protected override void OnCreate()
@@ -128,8 +112,6 @@ namespace QCommonLib
                     binding.m_Trigger();
                 }
             }
-
-            //QLog.Bundle("KEYS", DebugAllBindings());
         }
 
 
