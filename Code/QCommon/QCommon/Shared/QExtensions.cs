@@ -18,6 +18,11 @@ namespace QCommonLib
             return new float3(x, y, z);
         }
 
+        public static float3 Center(this Quad3 quad)
+        {
+            return (quad.a + quad.b + quad.c + quad.d) / 4;
+        }
+
         public static float2 Center(this Bounds2 bounds)
         {
             float x = bounds.x.min + (bounds.x.max - bounds.x.min) / 2;
@@ -165,22 +170,24 @@ namespace QCommonLib
 
         public static Bounds3 Encapsulate(this Bounds3 a, Bounds3 b)
         {
-            a.min.x = Math.Min(a.min.x, b.min.x);
-            a.min.y = Math.Min(a.min.y, b.min.y);
-            a.min.z = Math.Min(a.min.z, b.min.z);
-            a.max.x = Math.Max(a.max.x, b.max.x);
-            a.max.y = Math.Max(a.max.y, b.max.y);
-            a.max.z = Math.Max(a.max.z, b.max.z);
-            return a;
+            Bounds3 c = default;
+            c.min.x = Math.Min(a.min.x, b.min.x);
+            c.min.y = Math.Min(a.min.y, b.min.y);
+            c.min.z = Math.Min(a.min.z, b.min.z);
+            c.max.x = Math.Max(a.max.x, b.max.x);
+            c.max.y = Math.Max(a.max.y, b.max.y);
+            c.max.z = Math.Max(a.max.z, b.max.z);
+            return c;
         }
 
         public static Bounds2 Encapsulate(this Bounds2 a, Bounds2 b)
         {
-            a.min.x = Math.Min(a.min.x, b.min.x);
-            a.min.y = Math.Min(a.min.y, b.min.y);
-            a.max.x = Math.Max(a.max.x, b.max.x);
-            a.max.y = Math.Max(a.max.y, b.max.y);
-            return a;
+            Bounds2 c = default;
+            c.min.x = Math.Min(a.min.x, b.min.x);
+            c.min.y = Math.Min(a.min.y, b.min.y);
+            c.max.x = Math.Max(a.max.x, b.max.x);
+            c.max.y = Math.Max(a.max.y, b.max.y);
+            return c;
         }
 
         public static Bounds3 Expand(this Bounds3 b, float3 size)

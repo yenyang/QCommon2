@@ -54,7 +54,7 @@ namespace QCommonLib
             m_Barrier.Dispose();
         }
 
-         internal bool IsPressed => m_Action.IsPressed();
+        internal bool IsPressed => m_Action.IsPressed();
 
         internal bool Enabled
         {
@@ -139,8 +139,14 @@ namespace QCommonLib
             string msg = $"Bindings: {_Bindings.Count}";
             foreach (QKey_Binding binding in _Bindings)
             {
-                msg += $"\n{binding.m_Action.name,20}: enabled:{binding.Enabled,-5} {binding.m_Context}";
+                msg += $"\n{binding.m_Action.name,20}: enabled:{binding.Enabled,-5} {binding.m_Context} bindings:{binding.m_Action.bindings.Count()}";
+                //foreach (ProxyBinding pb in binding.m_Action.bindings)
+                //{
+                //    msg += $"\n    {pb}, mapName:{pb.m_MapName}, path:{pb.path},";
+                //    msg += $"\n    + mods:{pb.modifiers.Count}, action:{pb.m_ActionName}, {pb.ToHumanReadablePath().Count()}:{string.Join(",", pb.ToHumanReadablePath())}";
+                //}
             }
+
             return msg;
         }
 

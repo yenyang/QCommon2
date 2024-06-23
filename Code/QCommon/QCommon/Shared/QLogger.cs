@@ -204,10 +204,19 @@ namespace QCommonLib
                 DoImpl(_IntroMessage, LogLevel.Info, string.Empty);
                 _IntroMessage = string.Empty;
             }
+
             DoImpl(message, logLevel, code);
         }
 
         private void DoImpl(string message, LogLevel logLevel, string code)
+        {
+            Game.SceneFlow.GameManager.instance.RunOnMainThread(() =>
+            {
+                DoOnMain(message, logLevel, code);
+            });
+        }
+
+        private void DoOnMain(string message, LogLevel logLevel, string code)
         {
             try
             {
@@ -221,7 +230,6 @@ namespace QCommonLib
 
                     long secs = ticks / Stopwatch.Frequency;
                     long fraction = ticks % Stopwatch.Frequency;
-                    //string levelStr = $"{logLevel}";
                     string fracStr = fraction.ToString();
                     string timeStr = $"{secs:n0}.{fracStr.Substring(0, Math.Min(fracStr.Length, 3))}";
                     msg += $"[{logLevel}|{timeStr}{frameCount}] {code}{message}{NL}";
