@@ -226,7 +226,14 @@ namespace QCommonLib
                     string msg = string.Empty;
                     if (code != string.Empty) code += " ";
                     string frameCount = string.Empty;
-                    if (logLevel == LogLevel.Debug) frameCount = $"|{UnityEngine.Time.frameCount}";
+                    try
+                    {
+                        if (logLevel == LogLevel.Debug) frameCount = $"|{UnityEngine.Time.frameCount}";
+                    }
+                    catch
+                    {
+                        frameCount = $"|???";
+                    }
 
                     long secs = ticks / Stopwatch.Frequency;
                     long fraction = ticks % Stopwatch.Frequency;
