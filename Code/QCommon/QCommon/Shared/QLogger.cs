@@ -220,27 +220,27 @@ namespace QCommonLib
         {
             try
             {
+                var ticks = Timer.ElapsedTicks;
+                string msg = string.Empty;
+                if (code != string.Empty) code += " ";
+                string frameCount = string.Empty;
+                try
+                {
+                    if (logLevel == LogLevel.Debug) frameCount = $"|{UnityEngine.Time.frameCount}";
+                }
+                catch
+                {
+                    frameCount = $"|???";
+                }
+
+                long secs = ticks / Stopwatch.Frequency;
+                long fraction = ticks % Stopwatch.Frequency;
+                string fracStr = fraction.ToString();
+                string timeStr = $"{secs:n0}.{fracStr.Substring(0, Math.Min(fracStr.Length, 3))}";
+                msg += $"[{logLevel}|{timeStr}{frameCount}] {code}{message}{NL}";
+
                 lock (LogFile)
                 {
-                    var ticks = Timer.ElapsedTicks;
-                    string msg = string.Empty;
-                    if (code != string.Empty) code += " ";
-                    string frameCount = string.Empty;
-                    try
-                    {
-                        if (logLevel == LogLevel.Debug) frameCount = $"|{UnityEngine.Time.frameCount}";
-                    }
-                    catch
-                    {
-                        frameCount = $"|???";
-                    }
-
-                    long secs = ticks / Stopwatch.Frequency;
-                    long fraction = ticks % Stopwatch.Frequency;
-                    string fracStr = fraction.ToString();
-                    string timeStr = $"{secs:n0}.{fracStr.Substring(0, Math.Min(fracStr.Length, 3))}";
-                    msg += $"[{logLevel}|{timeStr}{frameCount}] {code}{message}{NL}";
-
                     using StreamWriter w = File.AppendText(LogFile);
                     w.Write(msg);
                 }
