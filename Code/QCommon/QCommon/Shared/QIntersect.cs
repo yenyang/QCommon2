@@ -7,15 +7,43 @@ namespace QCommonLib
 {
     internal class QIntersect
     {
-        public static bool DoesLineIntersectCylinder(Line3.Segment line, Circle2 cylinderCircle, Bounds1 cylinderHeight, out List<float3> hit)
+        public static bool DoesLineIntersectCircle2(Line3.Segment line, Circle2 circle, float height, out float2 hit)
         {
-            hit = new();
-            line = GetLineHorizontalSlice(line, cylinderHeight);
+            hit = GetLinePointAtHeight(line, height);
+            return MathUtils.Intersect(circle, hit);
+        }
+
+        public static bool DoesLineIntersectQuad2(Line3.Segment line, Quad2 quad, float height, out float2 hit)
+        {
+            hit = GetLinePointAtHeight(line, height);
+            return MathUtils.Intersect(quad, hit);
+        }
+
+        public static bool DoesLineIntersectQuad3(Line3.Segment line, Quad3 quad, out float hit)
+        {
+            return MathUtils.Intersect(quad, line, out hit);
+        }
+
+        public static bool DoesLineIntersectBounds2(Line3.Segment line, Bounds2 bounds, float height, out float2 hit)
+        {
+            hit = GetLinePointAtHeight(line, height);
+            return MathUtils.Intersect(bounds, hit);
+        }
+
+        public static bool DoesLineIntersectBounds3(Line3.Segment line, Bounds3 bounds, out float2 hit)
+        {
+            return MathUtils.Intersect(bounds, line, out hit);
+        }
+
+        public static bool DoesLineIntersectCylinder(Line3.Segment line, Circle2 cylinderCircle, Bounds1 cylinderHeight)//, out List<float3> hit)
+        {
+            //hit = new();
+            line = GetLineVerticalSlice(line, cylinderHeight);
 
             if (MathUtils.Intersect(cylinderCircle, line.xz.a) && MathUtils.Intersect(cylinderCircle, line.xz.b))
             { // Is the line fully contained in the cylinder (i.e. near-vertical line)
-                hit.Add(line.a);
-                hit.Add(line.b);
+                //hit.Add(line.a);
+                //hit.Add(line.b);
                 return true;
             }
 
@@ -34,30 +62,25 @@ namespace QCommonLib
                 if (heightB > heightA)
                 {
                     (heightB, heightA) = (heightA, heightB);
-                    (b, a) = (a, b);
+                    //(b, a) = (a, b);
                 }
             }
 
             bool result = false;
-            //string msg = "";
             if (hits > 0)
             {
-                float3 hitPos = new(a.x, heightA, a.y);
-                if (heightA > line.a.y) hitPos = line.a;
-                hit.Add(hitPos);
+                //float3 hitPos = new(a.x, heightA, a.y);
+                //if (heightA > line.a.y) hitPos = line.a;
+                //hit.Add(hitPos);
                 if (heightA > cylinderHeight.min && heightA < cylinderHeight.max) result = true;
-                //msg += $" A:{hit[0].DX()}={heightA > cylinderHeight.min && heightA < cylinderHeight.max}";
             }
             if (hits > 1)
             {
-                float3 hitPos = new(b.x, heightB, b.y);
-                if (heightB < line.b.y) hitPos = line.b;
-                hit.Add(hitPos);
+                //float3 hitPos = new(b.x, heightB, b.y);
+                //if (heightB < line.b.y) hitPos = line.b;
+                //hit.Add(hitPos);
                 if (heightB > cylinderHeight.min && heightB < cylinderHeight.max) result = true;
-                //msg += $" B:{hit[1].DX()}={heightB > cylinderHeight.min && heightB < cylinderHeight.max}";
             }
-
-            //if (result) QLog.Bundle("INS", $"{cylinderCircle.position.D()}/{cylinderCircle.radius}, {cylinderHeight.min}:{cylinderHeight.max} {msg}");
 
             return result;
         }
@@ -68,7 +91,7 @@ namespace QCommonLib
         /// <param name="line">The line to slice</param>
         /// <param name="bounds">The bottom (min) and top (max) of the desired slice</param>
         /// <returns></returns>
-        public static Line3.Segment GetLineHorizontalSlice(Line3.Segment line, Bounds1 bounds)
+        public static Line3.Segment GetLineVerticalSlice(Line3.Segment line, Bounds1 bounds)
         {
             if (line.a.y == line.b.y) line.b.y -= 1; // Fudge the numbers if the line is truly horizontal
             if (line.a.y < line.b.y) (line.b, line.a) = (line.a, line.b); // Ensure B is the lower end
@@ -95,6 +118,23 @@ namespace QCommonLib
             float distX = x - line.a.x;
             float distY = mag.y * (distX / mag.x);
             return line.a.y + distY;
+        }
+
+        /// <summary>
+        /// Get the point at which a line is at a given Y coordinate
+        /// </summary>
+        /// <param name="line">The line to test</param>
+        /// <param name="y">The Y coordinate on the world scale</param>
+        /// <returns>The X,Z coordinates at height Y</returns>
+        public static float2 GetLinePointAtHeight(Line3.Segment line, float y)
+        {
+            // needs to handle if line is never at height
+            float3 mag = line.a - line.b;
+            float distY = line.a.y - y;
+            float t = distY / mag.y;
+            float3 point = math.lerp(line.a, line.b, t);
+            float2 result = new(point.x, point.z);
+            return result;
         }
 
         public static bool GetLinesIntersection(Line2 line1, Line2 line2, out float2 point)
