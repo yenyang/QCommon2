@@ -1,6 +1,5 @@
 ﻿using Colossal.Mathematics;
 using System;
-using System.Collections.Generic;
 using Unity.Mathematics;
 
 namespace QCommonLib
@@ -30,20 +29,23 @@ namespace QCommonLib
             return MathUtils.Intersect(bounds, hit);
         }
 
-        public static bool DoesLineIntersectBounds3(Line3.Segment line, Bounds3 bounds, out float2 hit)
+        public static bool DoesLineIntersectBounds3(Line3.Segment line, Bounds3 bounds, out float distance)
         {
-            return MathUtils.Intersect(bounds, line, out hit);
+            distance = 0f;
+            bool result = MathUtils.Intersect(bounds, line, out _);
+            if (result)
+            {
+                distance = MathUtils.Distance(line, bounds.Center(), out _);
+            }
+            return result;
         }
 
-        public static bool DoesLineIntersectCylinder(Line3.Segment line, Circle2 cylinderCircle, Bounds1 cylinderHeight)//, out List<float3> hit)
+        public static bool DoesLineIntersectCylinder(Line3.Segment line, Circle2 cylinderCircle, Bounds1 cylinderHeight)
         {
-            //hit = new();
             line = GetLineVerticalSlice(line, cylinderHeight);
 
             if (MathUtils.Intersect(cylinderCircle, line.xz.a) && MathUtils.Intersect(cylinderCircle, line.xz.b))
             { // Is the line fully contained in the cylinder (i.e. near-vertical line)
-                //hit.Add(line.a);
-                //hit.Add(line.b);
                 return true;
             }
 
@@ -62,23 +64,16 @@ namespace QCommonLib
                 if (heightB > heightA)
                 {
                     (heightB, heightA) = (heightA, heightB);
-                    //(b, a) = (a, b);
                 }
             }
 
             bool result = false;
             if (hits > 0)
             {
-                //float3 hitPos = new(a.x, heightA, a.y);
-                //if (heightA > line.a.y) hitPos = line.a;
-                //hit.Add(hitPos);
                 if (heightA > cylinderHeight.min && heightA < cylinderHeight.max) result = true;
             }
             if (hits > 1)
             {
-                //float3 hitPos = new(b.x, heightB, b.y);
-                //if (heightB < line.b.y) hitPos = line.b;
-                //hit.Add(hitPos);
                 if (heightB > cylinderHeight.min && heightB < cylinderHeight.max) result = true;
             }
 
@@ -194,15 +189,6 @@ namespace QCommonLib
                 else
                 {
                     result = math.distance(b, line.b);
-
-                    //float invert = math.distance(b, line.a);
-                    //float maxDist = math.distance(line.b, line.a);
-                    //bool isHit = invert < maxDist;
-                    //QLog.Debug($"E C:{circle.position.D()}/{circle.radius:0.00}  L:{line.a.D(),-15}:" +
-                    //    $" {line.b.D(),-15}:" +
-                    //    $"X:{b.D()} ({IntersectionsBetweenLineAndCircle(circle, line, out float2 _, out float2 _)}),  " +
-                    //    $"dist:{result:0.##} max:{maxDist:0.##} inv:{invert:0.##}  {isHit}/{fallback}");
-
                     // If the distance from opposite end of line is more than line length, use fallback value
                     if (math.distance(b, line.a) > math.distance(line.b, line.a)) result = fallback;
                 }

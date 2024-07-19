@@ -32,7 +32,7 @@ namespace QCommonLib
 
         public static float Center(this Bounds1 bounds)
         {
-            return bounds.min + (bounds.max - bounds.min) / 2;;
+            return bounds.min + (bounds.max - bounds.min) / 2;
         }
 
         public static float2 Center2D(this Bounds3 bounds)
