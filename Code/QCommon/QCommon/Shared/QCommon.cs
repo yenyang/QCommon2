@@ -7,6 +7,7 @@ using System.Reflection;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
+using UnityEngine.InputSystem;
 
 namespace QCommonLib
 {
@@ -102,6 +103,9 @@ namespace QCommonLib
         {
             return system.World.GetOrCreateSystemManaged<Game.UpdateSystem>().currentPhase.ToString();
         }
+
+        public static float2 MouseScreenPosition
+            => (float2)Mouse.current.position.ReadValue();
 
         public static string GetStackTrace(int lines = 5, int indentSize = 4)
         {
