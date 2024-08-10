@@ -1,6 +1,6 @@
 ﻿using Game.Input;
+using Game.Modding;
 using Game.SceneFlow;
-using MoveIt.Settings;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Entities;
@@ -76,7 +76,7 @@ namespace QCommonLib
             _KeyBindings.Add(binding);
         }
 
-        internal void Initialise(Settings settings)
+        internal void Initialise(ModSetting settings)
         {
             Enabled = true;
 

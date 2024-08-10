@@ -178,7 +178,7 @@ namespace QCommonLib
                     //float invert = math.distance(a, line.b);
                     //float maxDist = math.distance(line.a, line.b);
                     //bool isHit = invert < maxDist;
-                    //QLog.Debug($"S C:{circle.position.D()}/{circle.radius:0.00}  L:{line.a.D(),-15}:" +
+                    //QLog.XDebug($"S C:{circle.position.D()}/{circle.radius:0.00}  L:{line.a.D(),-15}:" +
                     //    $" {line.b.D(),-15}:" +
                     //    $"X:{a.D()} ({IntersectionsBetweenLineAndCircle(circle, line, out float2 _, out float2 _)}),  " +
                     //    $"dist:{result:0.##} max:{maxDist:0.##} inv:{invert:0.##}  {isHit}/{fallback}");

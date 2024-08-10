@@ -446,7 +446,7 @@ namespace QCommonLib
 
         public static string GetFormattedTimeNow()
         {
-            string timezone = "Unknown";
+            string timezone = "-Unknown";
             try
             {
                 TimeSpan ts = TimeZone.CurrentTimeZone.GetUtcOffset(DateTime.Now);
@@ -458,7 +458,7 @@ namespace QCommonLib
             }
             catch (Exception) { }
 
-            return DateTime.UtcNow.ToString(new CultureInfo("en-GB")) + $" ({timezone})";
+            return DateTime.UtcNow.ToString(new CultureInfo("en-GB")) + $" ({DateTime.Now.ToString("HH:mm:ss")}, UTC{timezone})";
         }
     }
 }

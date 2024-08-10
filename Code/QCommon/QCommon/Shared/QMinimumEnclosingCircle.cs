@@ -17,9 +17,7 @@ namespace QCommonLib
         /// <returns>The minimum enclosing circle (MEC)</returns>
         public static Circle2 Welzl(NativeList<float2> P)
         {
-            //_Rcount = 0;
             Circle2 result = WelzlHelper(P, new float2x3(), P.Length, 0);
-            //QLog.Debug($"R set created {_Rcount} times");
             return result;
         }
 
