@@ -10,6 +10,14 @@ namespace QCommonLib
 {
     internal static class QExtensions
     {
+        public static bool Exists(this Entity e, EntityManager manager)
+        {
+            if (e.Equals(Entity.Null)) return false;
+            if (!manager.Exists(e)) return false;
+            if (manager.HasComponent<Game.Common.Deleted>(e)) return false;
+            return true;
+        }
+
         public static float3 Center(this Bounds3 bounds)
         {
             float x = bounds.x.min + (bounds.x.max - bounds.x.min) / 2;
