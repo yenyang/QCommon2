@@ -107,6 +107,17 @@ namespace QCommonLib
         public static float2 MouseScreenPosition
             => (float2)Mouse.current.position.ReadValue();
 
+        public static MethodBase GetCallingMethod(int depth = 0)
+            => new StackFrame(2 + depth, false).GetMethod();
+
+        public static string GetCallingMethodName(int depth = 0)
+            => GetCallingMethod(depth + 1).Name;
+
+        public static string GetCallingMethodInfo(int depth = 0)
+        {
+            return new StackFrame(2 + depth, true).ToString();
+        }
+
         public static string GetStackTrace(int lines = 5, int indentSize = 4)
         {
             string[] stack = Environment.StackTrace.Split('\n');
