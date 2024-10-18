@@ -39,9 +39,9 @@ namespace QCommonLib
 
         internal QKey_Binding(ProxyAction action, QInput_Contexts context, QInputSystem.Trigger trigger, bool isPassive = false)
         {
-            m_Action = action;
-            m_Context = context;
-            m_Trigger = trigger;
+            m_Action    = action;
+            m_Context   = context;
+            m_Trigger   = trigger;
             m_IsPassive = isPassive;
         }
 
@@ -84,12 +84,12 @@ namespace QCommonLib
             _MouseCancelMimic = settings.GetAction(MOUSE_CANCEL);
 
             var builtInApplyAction = InputManager.instance.FindAction(InputManager.kToolMap, "Apply");
-            var builtInCancelAction = InputManager.instance.FindAction(InputManager.kToolMap, "Mouse Cancel");
+            var builtInCancelAction = InputManager.instance.FindAction(InputManager.kToolMap, "Cancel");
 
-            var mimicApplyBinding = _MouseApplyMimic.bindings.FirstOrDefault(b => b.group == nameof(Mouse));
-            var mimicCancelBinding = _MouseCancelMimic.bindings.FirstOrDefault(b => b.group == nameof(Mouse));
-            var builtInApplyBinding = builtInApplyAction.bindings.FirstOrDefault(b => b.group == nameof(Mouse));
-            var builtInCancelBinding = builtInCancelAction.bindings.FirstOrDefault(b => b.group == nameof(Mouse));
+            var mimicApplyBinding = _MouseApplyMimic.bindings.FirstOrDefault(b => b.device == InputManager.DeviceType.Mouse);
+            var mimicCancelBinding = _MouseCancelMimic.bindings.FirstOrDefault(b => b.device == InputManager.DeviceType.Mouse);
+            var builtInApplyBinding = builtInApplyAction.bindings.FirstOrDefault(b => b.device == InputManager.DeviceType.Mouse);
+            var builtInCancelBinding = builtInCancelAction.bindings.FirstOrDefault(b => b.device == InputManager.DeviceType.Mouse);
 
             var applyWatcher = new ProxyBinding.Watcher(builtInApplyBinding, binding => SetMimic(mimicApplyBinding, binding));
             var cancelWatcher = new ProxyBinding.Watcher(builtInCancelBinding, binding => SetMimic(mimicCancelBinding, binding));
