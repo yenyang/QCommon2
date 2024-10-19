@@ -4,7 +4,6 @@ using Game.SceneFlow;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Entities;
-using UnityEngine.InputSystem;
 
 namespace QCommonLib
 {
@@ -83,20 +82,6 @@ namespace QCommonLib
             _MouseApplyMimic = settings.GetAction(MOUSE_APPLY);
             _MouseCancelMimic = settings.GetAction(MOUSE_CANCEL);
 
-            var builtInApplyAction = InputManager.instance.FindAction(InputManager.kToolMap, "Apply");
-            var builtInCancelAction = InputManager.instance.FindAction(InputManager.kToolMap, "Cancel");
-
-            var mimicApplyBinding = _MouseApplyMimic.bindings.FirstOrDefault(b => b.device == InputManager.DeviceType.Mouse);
-            var mimicCancelBinding = _MouseCancelMimic.bindings.FirstOrDefault(b => b.device == InputManager.DeviceType.Mouse);
-            var builtInApplyBinding = builtInApplyAction.bindings.FirstOrDefault(b => b.device == InputManager.DeviceType.Mouse);
-            var builtInCancelBinding = builtInCancelAction.bindings.FirstOrDefault(b => b.device == InputManager.DeviceType.Mouse);
-
-            var applyWatcher = new ProxyBinding.Watcher(builtInApplyBinding, binding => SetMimic(mimicApplyBinding, binding));
-            var cancelWatcher = new ProxyBinding.Watcher(builtInCancelBinding, binding => SetMimic(mimicCancelBinding, binding));
-
-            SetMimic(mimicApplyBinding, applyWatcher.binding);
-            SetMimic(mimicCancelBinding, cancelWatcher.binding);
-
             foreach (var binding in _KeyBindings)
             {
                 binding.Enabled = binding.WhenToolDisabled;
@@ -138,14 +123,6 @@ namespace QCommonLib
                     binding.m_Trigger();
                 }
             }
-        }
-
-        private void SetMimic(ProxyBinding mimic, ProxyBinding buildIn)
-        {
-            var newMimicBinding = mimic.Copy();
-            newMimicBinding.path = buildIn.path;
-            newMimicBinding.modifiers = buildIn.modifiers;
-            InputManager.instance.SetBinding(newMimicBinding, out _);
         }
 
 
