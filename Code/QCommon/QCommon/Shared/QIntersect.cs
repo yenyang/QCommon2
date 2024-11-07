@@ -1,10 +1,11 @@
-﻿using Colossal.Mathematics;
-using System;
+﻿using System;
+using Colossal.Mathematics;
 using Unity.Mathematics;
+using UnityEngine;
 
 namespace QCommonLib
 {
-    internal class QIntersect
+    internal static class QIntersect
     {
         public static bool DoesLineIntersectCircle2(Line3.Segment line, Circle2 circle, float height, out float2 hit)
         {
@@ -88,7 +89,7 @@ namespace QCommonLib
         /// <returns></returns>
         public static Line3.Segment GetLineVerticalSlice(Line3.Segment line, Bounds1 bounds)
         {
-            if (line.a.y == line.b.y) line.b.y -= 1; // Fudge the numbers if the line is truly horizontal
+            if (Mathf.Approximately(line.a.y, line.b.y)) line.b.y -= 1; // Fudge the numbers if the line is truly horizontal
             if (line.a.y < line.b.y) (line.b, line.a) = (line.a, line.b); // Ensure B is the lower end
             if (bounds.max > line.a.y) bounds.max = line.a.y;
             if (bounds.min < line.b.y) bounds.min = line.b.y;
@@ -144,7 +145,7 @@ namespace QCommonLib
             float c2 = a2 * line2.a.x + b2 * line2.a.y;
 
             float delta = a1 * b2 - a2 * b1;
-            if (delta > -1 && delta < 1)
+            if (delta is > -1 and < 1)
             {
                 return false;
             }
@@ -169,29 +170,28 @@ namespace QCommonLib
         public static float IntersectionsBetweenLineAndCircleCut(Circle2 circle, Line2 line, bool isCircleAtStart, float fallback = 0f)
         {
             float result = 0;
-            if (IntersectionsBetweenLineAndCircle(circle, line, out float2 a, out float2 b) > 0)
+            if (IntersectionsBetweenLineAndCircle(circle, line, out float2 a, out float2 b) <= 0) return result;
+            
+            if (isCircleAtStart)
             {
-                if (isCircleAtStart)
-                {
-                    result = math.distance(a, line.a);
+                result = math.distance(a, line.a);
 
-                    //float invert = math.distance(a, line.b);
-                    //float maxDist = math.distance(line.a, line.b);
-                    //bool isHit = invert < maxDist;
-                    //QLog.XDebug($"S C:{circle.position.D()}/{circle.radius:0.00}  L:{line.a.D(),-15}:" +
-                    //    $" {line.b.D(),-15}:" +
-                    //    $"X:{a.D()} ({IntersectionsBetweenLineAndCircle(circle, line, out float2 _, out float2 _)}),  " +
-                    //    $"dist:{result:0.##} max:{maxDist:0.##} inv:{invert:0.##}  {isHit}/{fallback}");
+                //float invert = math.distance(a, line.b);
+                //float maxDist = math.distance(line.a, line.b);
+                //bool isHit = invert < maxDist;
+                //QLog.XDebug($"S C:{circle.position.D()}/{circle.radius:0.00}  L:{line.a.D(),-15}:" +
+                //    $" {line.b.D(),-15}:" +
+                //    $"X:{a.D()} ({IntersectionsBetweenLineAndCircle(circle, line, out float2 _, out float2 _)}),  " +
+                //    $"dist:{result:0.##} max:{maxDist:0.##} inv:{invert:0.##}  {isHit}/{fallback}");
 
-                    // If the distance from opposite end of line is more than line length, use fallback value
-                    if (math.distance(a, line.b) > math.distance(line.a, line.b)) result = fallback;
-                }
-                else
-                {
-                    result = math.distance(b, line.b);
-                    // If the distance from opposite end of line is more than line length, use fallback value
-                    if (math.distance(b, line.a) > math.distance(line.b, line.a)) result = fallback;
-                }
+                // If the distance from opposite end of line is more than line length, use fallback value
+                if (math.distance(a, line.b) > math.distance(line.a, line.b)) result = fallback;
+            }
+            else
+            {
+                result = math.distance(b, line.b);
+                // If the distance from opposite end of line is more than line length, use fallback value
+                if (math.distance(b, line.a) > math.distance(line.b, line.a)) result = fallback;
             }
             return result;
         }
@@ -202,11 +202,11 @@ namespace QCommonLib
             float t;
             float2 magnitude = line.b - line.a;
 
-            var a = magnitude.x * magnitude.x + magnitude.y * magnitude.y;
-            var b = 2 * (magnitude.x * (line.a.x - circle.position.x) + magnitude.y * (line.a.y - circle.position.y));
-            var c = (line.a.x - circle.position.x) * (line.a.x - circle.position.x) + (line.a.y - circle.position.y) * (line.a.y - circle.position.y) - circle.radius * circle.radius;
+            float a = magnitude.x * magnitude.x + magnitude.y * magnitude.y;
+            float b = 2 * (magnitude.x * (line.a.x - circle.position.x) + magnitude.y * (line.a.y - circle.position.y));
+            float c = (line.a.x - circle.position.x) * (line.a.x - circle.position.x) + (line.a.y - circle.position.y) * (line.a.y - circle.position.y) - circle.radius * circle.radius;
 
-            var determinate = b * b - 4 * a * c;
+            float determinate = b * b - 4 * a * c;
             if ((a <= 0.0000001) || (determinate < -0.0000001))
             {
                 // No real solutions.

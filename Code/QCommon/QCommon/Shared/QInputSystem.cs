@@ -1,12 +1,14 @@
-﻿using Game.Input;
-using Game.Modding;
-using Game.SceneFlow;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Game.Input;
+using Game.Modding;
+using Game.SceneFlow;
 using Unity.Entities;
 
 namespace QCommonLib
 {
+    [Flags]
     internal enum QInput_Contexts
     {
         ToolDisabled    = 1,
@@ -19,22 +21,22 @@ namespace QCommonLib
         /// <summary>
         /// The ProxyAction as defined in the mod's settings
         /// </summary>
-        internal ProxyAction m_Action;
+        internal readonly ProxyAction m_Action;
 
         /// <summary>
         /// When this input binding should be active
         /// </summary>
-        internal QInput_Contexts m_Context;
+        internal readonly QInput_Contexts m_Context;
 
         /// <summary>
         /// The function to call (null for Passive bindings)
         /// </summary>
-        internal QInputSystem.Trigger m_Trigger;
+        internal readonly QInputSystem.Trigger m_Trigger;
 
         /// <summary>
         /// This keybind does not Trigger, it is read as needed
         /// </summary>
-        internal bool m_IsPassive;
+        internal readonly bool m_IsPassive;
 
         internal QKey_Binding(ProxyAction action, QInput_Contexts context, QInputSystem.Trigger trigger, bool isPassive = false)
         {
@@ -82,7 +84,7 @@ namespace QCommonLib
             _MouseApplyMimic = settings.GetAction(MOUSE_APPLY);
             _MouseCancelMimic = settings.GetAction(MOUSE_CANCEL);
 
-            foreach (var binding in _KeyBindings)
+            foreach (QKey_Binding binding in _KeyBindings)
             {
                 binding.Enabled = binding.WhenToolDisabled;
             }
@@ -95,12 +97,9 @@ namespace QCommonLib
 
         private void OnToolToggle(bool enabled)
         {
-            foreach (var binding in _KeyBindings)
+            foreach (QKey_Binding binding in _KeyBindings.Where(binding => !binding.WhenToolDisabled))
             {
-                if (!binding.WhenToolDisabled)
-                {
-                    binding.Enabled = enabled;
-                }
+                binding.Enabled = enabled;
             }
 
             //DebugDumpAllBindings($"OnToolToggle {enabled}: ");
@@ -116,12 +115,9 @@ namespace QCommonLib
             if ((GameManager.instance.gameMode & Game.GameMode.GameOrEditor) == 0) return;
             if (!GameManager.instance.inputManager.controlOverWorld) return;
 
-            foreach (var binding in _KeyBindings)
+            foreach (QKey_Binding binding in _KeyBindings.Where(binding => !binding.m_IsPassive && binding.m_Action.WasPressedThisFrame()))
             {
-                if (!binding.m_IsPassive && binding.m_Action.WasPressedThisFrame())
-                {
-                    binding.m_Trigger();
-                }
+                binding.m_Trigger();
             }
         }
 

@@ -1,8 +1,8 @@
-﻿using Colossal.Mathematics;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Colossal.Mathematics;
 using Unity.Entities;
 using Unity.Mathematics;
 
@@ -97,28 +97,16 @@ namespace QCommonLib
         }
 
         public static bool IsNodeA(this short idx)
-        {
-            if (idx < 2) return true;
-            return false;
-        }
+            => idx < 2;
 
         public static bool IsNodeB(this short idx)
-        {
-            if (idx > 1 && idx <= 3) return true;
-            return false;
-        }
+            => idx is 2 or 3;
 
         public static bool IsEnd(this short idx)
-        {
-            if (idx == 0 || idx == 3) return true;
-            return false;
-        }
+            => idx is 0 or 3;
 
         public static bool IsMiddle(this short idx)
-        {
-            if (idx == 1 || idx == 2) return true;
-            return false;
-        }
+            => idx is 1 or 2;
 
         public static string D(this UnityEngine.Color c)
         {
@@ -279,14 +267,14 @@ namespace QCommonLib
             float3 v;
 
             if (test > 0.4995f * unit)
-            { // north pole
+            { // North Pole
                 v.y = 2f * math.atan2(q1.y, q1.x);
                 v.x = math.PI / 2;
                 v.z = 0;
                 return ClampDegreesAll(math.degrees(v));
             }
             if (test < -0.4995f * unit)
-            { // south pole
+            { // South Pole
                 v.y = -2f * math.atan2(q1.y, q1.x);
                 v.x = -math.PI / 2;
                 v.z = 0;
@@ -303,7 +291,7 @@ namespace QCommonLib
             return ClampDegreesAll(math.degrees(v));
         }
 
-        static float3 ClampDegreesAll(float3 angles)
+        private static float3 ClampDegreesAll(float3 angles)
         {
             angles.x = ClampDegrees(angles.x);
             angles.y = ClampDegrees(angles.y);
@@ -311,7 +299,7 @@ namespace QCommonLib
             return angles;
         }
 
-        static float ClampDegrees(float angle)
+        private static float ClampDegrees(float angle)
         {
             angle %= 360;
             if (angle < 0) angle += 360;

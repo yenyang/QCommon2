@@ -8,7 +8,7 @@ namespace QCommonLib
     /// Adapted from GeeksForGeeks
     /// https://www.geeksforgeeks.org/minimum-enclosing-circle-using-welzls-algorithm/
     /// </summary>
-    public class QMinimumEnclosingCircle
+    public static class QMinimumEnclosingCircle
     {
         /// <summary>
         /// Get the minimum enclosing circle (MEC) for passed float2 list
@@ -58,12 +58,18 @@ namespace QCommonLib
         // Return the minimum enclosing circle for N <= 3
         private static Circle2 MinCircleTrivial(float2x3 R, int rIdx)
         {
-            if (rIdx == 0) return new Circle2(0, new float2(0, 0));
-            else if (rIdx == 1) return new Circle2(0, R[0]);
-            else if (rIdx == 2) return CircleFrom(R[0], R[1]);
+            switch (rIdx)
+            {
+                case 0:
+                    return new Circle2(0, new float2(0, 0));
+                case 1:
+                    return new Circle2(0, R[0]);
+                case 2:
+                    return CircleFrom(R[0], R[1]);
+            }
 
             // To check if MEC can be determined by 2 points only
-            for (int i = 0; i < 3; i++)
+            for (var i = 0; i < 3; i++)
             {
                 for (int j = i + 1; j < 3; j++)
                 {
@@ -106,7 +112,7 @@ namespace QCommonLib
         private static bool IsValidCircle(Circle2 c, float2x3 P, int rIdx)
         {
             // Iterating through all the points to check whether the points lie inside the circle or not
-            for (int i = 0; i < rIdx; i++)
+            for (var i = 0; i < rIdx; i++)
             {
                 if (!IsInside(c, P[i])) return false;
             }

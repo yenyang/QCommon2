@@ -1,10 +1,10 @@
-﻿using Colossal.Logging;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
+using Colossal.Logging;
 
 namespace QCommonLib
 {
@@ -13,79 +13,79 @@ namespace QCommonLib
     /// <summary>
     /// Static log for quick debugging, goes to {AssemblyName}_debug.log
     /// </summary>
-    public class QLog
+    public static class QLog
     {
         /// <summary>
         /// The debug logger object
         /// </summary>
-        internal static QLoggerCustom s_Instance;
+        private static QLoggerCustom _Instance;
 
         internal static void Init(bool isDebug)
         {
-            s_Instance = new(isDebug);
+            _Instance = new(isDebug);
         }
 
         #region Redirect to instance
         /// <summary>
-        /// Set whether or not to save debug messages
+        /// Set whether to save debug messages
         /// </summary>
         public static bool IsDebug
         {
-            get => (s_Instance is not null) && s_Instance.IsDebug;
+            get => (_Instance is not null) && _Instance.IsDebug;
             set
             {
-                if (s_Instance is not null) s_Instance.IsDebug = value;
+                if (_Instance is not null) _Instance.IsDebug = value;
             }
         }
 
         public static void Bundle(string key, string message)
         {
-            s_Instance?.Bundle(key, message);
+            _Instance?.Bundle(key, message);
         }
 
         public static void FlushBundle()
         {
-            s_Instance?.FlushBundles();
+            _Instance?.FlushBundles();
         }
 
         public static void Debug(string message, string code = "")
         {
-            s_Instance?.Debug(message, code);
+            _Instance?.Debug(message, code);
         }
 
         public static void Debug(Exception exception, string code = "")
         {
-            s_Instance?.Debug(exception, code);
+            _Instance?.Debug(exception, code);
         }
 
         public static void Info(string message, string code = "")
         {
-            s_Instance?.Info(message, code);
+            _Instance?.Info(message, code);
         }
 
         public static void Info(Exception exception, string code = "")
         {
-            s_Instance?.Info(exception, code);
+            _Instance?.Info(exception, code);
         }
 
         public static void Warning(string message, string code = "")
         {
-            s_Instance?.Warning(message, code);
+            _Instance?.Warning(message, code);
         }
 
         public static void Warning(Exception exception, string code = "")
         {
-            s_Instance?.Warning(exception, code);
+            _Instance?.Warning(exception, code);
         }
 
         public static void Error(string message, string code = "")
         {
-            s_Instance?.Error(message, code);
+            _Instance?.Error(message, code);
         }
 
         public static void Error(Exception exception, string code = "")
         {
-            s_Instance?.Error(exception, code);
+            _Instance?.Error(exception, code);
         }
         #endregion
     }
@@ -110,7 +110,7 @@ namespace QCommonLib
             Error,
         }
 
-        private string _IntroMessage = string.Empty;
+        private string _IntroMessage;
         private bool _HasLogged = false;
 
         /// <summary>
@@ -120,7 +120,7 @@ namespace QCommonLib
         public QLoggerCustom(bool isDebug = true) : base(isDebug)
         {
             Timer = Stopwatch.StartNew();
-            string fileNameBase = Path.Combine(Path.GetDirectoryName(UnityEngine.Application.consoleLogPath), "Logs", AssemblyName + "_debug");
+            string fileNameBase = Path.Combine(Path.GetDirectoryName(UnityEngine.Application.consoleLogPath) ?? throw new InvalidOperationException(), "Logs", AssemblyName + "_debug");
             LogFile = fileNameBase + ".log";
             string prevLogFile = fileNameBase + "-prev.log";
 
@@ -220,10 +220,10 @@ namespace QCommonLib
         {
             try
             {
-                var ticks = Timer.ElapsedTicks;
-                string msg = string.Empty;
+                long ticks = Timer.ElapsedTicks;
+                var msg = string.Empty;
                 if (code != string.Empty) code += " ";
-                string frameCount = string.Empty;
+                var frameCount = string.Empty;
                 try
                 {
                     if (logLevel == LogLevel.Debug) frameCount = $"|{UnityEngine.Time.frameCount}";
@@ -235,8 +235,8 @@ namespace QCommonLib
 
                 long secs = ticks / Stopwatch.Frequency;
                 long fraction = ticks % Stopwatch.Frequency;
-                string fracStr = fraction.ToString();
-                string timeStr = $"{secs:n0}.{fracStr.Substring(0, Math.Min(fracStr.Length, 3))}";
+                var fracStr = fraction.ToString();
+                var timeStr = $"{secs:n0}.{fracStr.Substring(0, Math.Min(fracStr.Length, 3))}";
                 msg += $"[{logLevel}|{timeStr}{frameCount}] {code}{message}{NL}";
 
                 lock (LogFile)
@@ -257,15 +257,17 @@ namespace QCommonLib
         /// <summary>
         /// The ColossalOrder ILog instance
         /// </summary>
-        internal ILog Logger { get; set; }
+        private ILog _Logger { get; set; }
         private readonly bool _MirrorToStatic;
+        private readonly bool _IsBetaBuild;
 
-        public QLoggerCO(bool isDebug = true, string filename = "", bool mirrorToStatic = true) : base(isDebug)
+        public QLoggerCO(bool isDebug = true, string filename = "", bool mirrorToStatic = true, bool isBetaBuild = false) : base(isDebug)
         {
             _MirrorToStatic = mirrorToStatic;
+            _IsBetaBuild = isBetaBuild;
 
             filename = filename.Equals(string.Empty) ? AssemblyName : filename;
-            string fileNameBase = Path.Combine(Path.GetDirectoryName(UnityEngine.Application.consoleLogPath), "Logs", filename);
+            string fileNameBase = Path.Combine(Path.GetDirectoryName(UnityEngine.Application.consoleLogPath) ?? throw new InvalidOperationException(), "Logs", filename);
             string logFile = fileNameBase + ".log";
             string prevLogFile = fileNameBase + "-prev.log";
             string deleteBuggedFileName = fileNameBase + ".Mod.log";
@@ -283,16 +285,16 @@ namespace QCommonLib
                 File.Delete(deleteBuggedFileName);
             }
 
-            Logger = LogManager.GetLogger(filename);
-            Logger.SetEffectiveness(Level.All);
+            _Logger = LogManager.GetLogger(filename);
+            _Logger.SetEffectiveness(Level.All);
 
             AssemblyName details = AssemblyObject.GetName();
-            Logger.Info($"{details.Name} v{details.Version} at {GetFormattedTimeNow()}");
+            _Logger.Info($"{details.Name} v{details.Version}{(_IsBetaBuild ? "-beta" : "")} at {GetFormattedTimeNow()}");
         }
 
         ~QLoggerCO()
         {
-            Logger.Info($"{AssemblyName} closing at {GetFormattedTimeNow()}");
+            _Logger.Info($"{AssemblyName} closing at {GetFormattedTimeNow()}");
         }
 
         #region Debug
@@ -302,7 +304,7 @@ namespace QCommonLib
             { 
                 if (_MirrorToStatic) QLog.Debug(message, code);
                 if (code != string.Empty) code += " ";
-                Logger.Debug(code + message);
+                _Logger.Debug(code + message);
             }
         }
 
@@ -311,7 +313,7 @@ namespace QCommonLib
             if (IsDebug)
             {
                 if (_MirrorToStatic) QLog.Debug(exception, code);
-                Logger.Debug(exception, code);
+                _Logger.Debug(exception, code);
             }
         }
         #endregion
@@ -321,13 +323,13 @@ namespace QCommonLib
         {
             if (_MirrorToStatic) QLog.Info(message, code);
             if (code != string.Empty) code += " ";
-            Logger.Info(code + message);
+            _Logger.Info(code + message);
         }
 
         public override void Info(Exception exception, string code = "")
         {
             if (_MirrorToStatic) QLog.Info(exception, code);
-            Logger.Info(exception, code);
+            _Logger.Info(exception, code);
         }
         #endregion
 
@@ -336,13 +338,13 @@ namespace QCommonLib
         {
             if (_MirrorToStatic) QLog.Warning(message, code);
             if (code != string.Empty) code += " ";
-            Logger.Warn(code + message);
+            _Logger.Warn(code + message);
         }
 
         public override void Warning(Exception exception, string code = "")
         {
             if (_MirrorToStatic) QLog.Warning(exception, code);
-            Logger.Warn(exception, code);
+            _Logger.Warn(exception, code);
         }
         #endregion
 
@@ -351,7 +353,7 @@ namespace QCommonLib
         {
             if (_MirrorToStatic) QLog.Error(message, code);
             if (code != string.Empty) code += " ";
-            Logger.Error(code + message + NL + new StackTrace().ToString() + NL);
+            _Logger.Error(code + message + NL + new StackTrace().ToString() + NL);
         }
 
         public override void Error(Exception exception, string code = "")
@@ -360,7 +362,7 @@ namespace QCommonLib
             if (code != string.Empty) code += " ";
             string message = exception.ToString();
             if (!(exception.StackTrace is null || exception.StackTrace == string.Empty)) message += NL + new StackTrace().ToString();
-            Logger.Error(code + message + NL);
+            _Logger.Error(code + message + NL);
         }
         #endregion
     }
@@ -371,11 +373,12 @@ namespace QCommonLib
         /// The calling assembly
         /// </summary>
         internal Assembly AssemblyObject { get; set; }
-        internal string AssemblyName { get => AssemblyObject.GetName().Name; }
+        internal string AssemblyName => AssemblyObject.GetName().Name;
+
         /// <summary>
         /// NewLine for the player's environment
         /// </summary>
-        internal string NL = Environment.NewLine;
+        internal readonly string NL = Environment.NewLine;
         /// <summary>
         /// Should debug messages be logged?
         /// </summary>
@@ -383,11 +386,11 @@ namespace QCommonLib
         /// <summary>
         /// Storage for bundled messages
         /// </summary>
-        protected Dictionary<string, (string Message, int Count)> _BundledMsgs;
+        private readonly Dictionary<string, (string Message, int Count)> _BundledMsgs;
 
-        public QLoggerBase(bool isDebug = false)
+        protected QLoggerBase(bool isDebug = false)
         {
-            AssemblyObject = Assembly.GetCallingAssembly() ?? throw new ArgumentNullException("QLogger: Failed to find calling assembly");
+            AssemblyObject = Assembly.GetCallingAssembly();
             IsDebug = isDebug;
             _BundledMsgs = new();
         }
@@ -450,15 +453,18 @@ namespace QCommonLib
             try
             {
                 TimeSpan ts = TimeZone.CurrentTimeZone.GetUtcOffset(DateTime.Now);
-                timezone = string.Format("{0}:{1:D2}", ts.Hours, ts.Minutes);
+                timezone = $"{ts.Hours}:{ts.Minutes:D2}";
                 if (ts.Hours > 0 || (ts.Hours == 0 && ts.Minutes > 0))
                 {
                     timezone = "+" + timezone;
                 }
             }
-            catch (Exception) { }
+            catch (Exception)
+            {
+                // ignored
+            }
 
-            return DateTime.UtcNow.ToString(new CultureInfo("en-GB")) + $" ({DateTime.Now.ToString("HH:mm:ss")}, UTC{timezone})";
+            return DateTime.UtcNow.ToString(new CultureInfo("en-GB")) + $" ({DateTime.Now:HH:mm:ss}, UTC{timezone})";
         }
     }
 }

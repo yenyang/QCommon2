@@ -4,15 +4,15 @@ namespace QCommonLib
 {
     internal static class QKeyboard
     {
-        internal static Keyboard m_Keyboard;
+        private static Keyboard _Keyboard;
         private static UnityEngine.InputSystem.Controls.ButtonControl _Alt, _Shift, _Control;
 
         internal static void Init()
         {
-            m_Keyboard = InputSystem.GetDevice<Keyboard>();
-            _Alt = m_Keyboard.altKey;
-            _Control = m_Keyboard.ctrlKey;
-            _Shift = m_Keyboard.shiftKey;
+            _Keyboard   = InputSystem.GetDevice<Keyboard>();
+            _Alt        = _Keyboard.altKey;
+            _Control    = _Keyboard.ctrlKey;
+            _Shift      = _Keyboard.shiftKey;
         }
 
         internal static bool Alt => _Alt.isPressed;

@@ -1,9 +1,9 @@
-﻿using Colossal.Entities;
-using Game.Prefabs;
-using Game.Tools;
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Reflection;
+using Colossal.Entities;
+using Game.Prefabs;
+using Game.Tools;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -11,7 +11,7 @@ using UnityEngine.InputSystem;
 
 namespace QCommonLib
 {
-    public class QCommon
+    public static class QCommon
     {
         public static long ElapsedMilliseconds(long startTime)
         {
@@ -20,7 +20,7 @@ namespace QCommonLib
             return elapsed / (Stopwatch.Frequency / 1000);
         }
 
-        public static ToolBaseSystem ActiveTool { get => QCommon.ToolSystem.activeTool; }
+        public static ToolBaseSystem ActiveTool => ToolSystem.activeTool;
 
         public static ToolSystem ToolSystem
         {
@@ -67,14 +67,14 @@ namespace QCommonLib
             if (e.Equals(Entity.Null))                  return "NULL-NullPrefabRef";
             if (!Manager.Exists(e))                     return "NULL-PrefabRefNotExist";
             if (!Manager.HasComponent<PrefabRef>(e))    return "NULL-NoPrefabRefComp";
-            PrefabRef prefabRef = Manager.GetComponentData<PrefabRef>(e);
+            var prefabRef = Manager.GetComponentData<PrefabRef>(e);
             if (prefabRef.m_Prefab.Equals(Entity.Null)) return "NULL-PrefabEntNull";
             if (!Manager.Exists(prefabRef.m_Prefab))    return "NULL-PrefabEntExist";
 
             string name;
             try
             {
-                PrefabBase prefabBase = PrefabSystem.GetPrefab<PrefabBase>(prefabRef);
+                var prefabBase = PrefabSystem.GetPrefab<PrefabBase>(prefabRef);
                 if (prefabBase != null)
                 {
                     name = prefabBase.prefab ? prefabBase.prefab.name : prefabBase.name;
@@ -138,7 +138,7 @@ namespace QCommonLib
         {
             string indent = new(' ', indentSize);
             string prefix = nlPrefix ? Environment.NewLine : string.Empty;
-            int hexPos = line.IndexOf("[0x");
+            int hexPos = line.IndexOf("[0x", StringComparison.Ordinal);
             if (hexPos > 0) line = line.Substring(0, hexPos) + line.Substring(hexPos + 10);
             return prefix + indent + line.Trim();
         }
