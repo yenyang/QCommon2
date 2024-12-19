@@ -113,8 +113,14 @@ namespace QCommonLib
         public static string GetCallingMethodName(int depth = 0)
             => GetCallingMethod(depth + 1).Name;
 
+        public static string GetCallingMethodFullname(int depth = 0)
+        {
+            var frame = new StackFrame(2 + depth, false);
+            return frame.GetMethod().DeclaringType.Name + "." + frame.GetMethod().Name;
+        }
+
         public static string GetCallerDebug()
-            => "(caller:" + GetCallingMethodName(1) + ";" + GetCallingMethodName(2) + ";" + GetCallingMethodName(3) + ")";
+            => "(caller:" + GetCallingMethodFullname(1) + "; " + GetCallingMethodFullname(2) + "; " + GetCallingMethodFullname(3) + ")";
 
         public static string GetCallingMethodInfo(int depth = 0)
         {
