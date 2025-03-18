@@ -292,7 +292,7 @@ namespace QCommonLib
             _Logger.Info($"{details.Name} v{details.Version}{(_IsBetaBuild ? "-beta" : "")} at {GetFormattedTimeNow()}");
         }
 
-        ~QLoggerCO()
+        public void Shutdown()
         {
             _Logger.Info($"{AssemblyName} closing at {GetFormattedTimeNow()}");
         }

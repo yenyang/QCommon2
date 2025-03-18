@@ -113,7 +113,7 @@ namespace QCommonLib
         protected override void OnUpdate()
         {
             if ((GameManager.instance.gameMode & Game.GameMode.GameOrEditor) == 0) return;
-            if (!GameManager.instance.inputManager.controlOverWorld) return;
+            if (!InputManager.instance.controlOverWorld) return;
 
             foreach (QKey_Binding binding in _KeyBindings.Where(binding => !binding.m_IsPassive && binding.m_Action.WasPressedThisFrame()))
             {
