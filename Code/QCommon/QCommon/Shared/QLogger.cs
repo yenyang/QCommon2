@@ -452,7 +452,7 @@ namespace QCommonLib
             string timezone = "-Unknown";
             try
             {
-                TimeSpan ts = TimeZone.CurrentTimeZone.GetUtcOffset(DateTime.Now);
+                TimeSpan ts = TimeZoneInfo.Local.GetUtcOffset(DateTime.Now);// TimeZone.CurrentTimeZone.GetUtcOffset(DateTime.Now);
                 timezone = $"{ts.Hours}:{ts.Minutes:D2}";
                 if (ts.Hours > 0 || (ts.Hours == 0 && ts.Minutes > 0))
                 {
