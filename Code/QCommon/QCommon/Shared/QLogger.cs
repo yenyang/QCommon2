@@ -1,10 +1,11 @@
-﻿using System;
+﻿using Colossal.Logging;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
-using Colossal.Logging;
+using UnityEngine.InputSystem;
 
 namespace QCommonLib
 {
@@ -174,7 +175,7 @@ namespace QCommonLib
 
         public override void Warning(Exception exception, string code = "")
         {
-            Do(exception.ToStringNoTrace(), LogLevel.Error, code);
+            Do(exception.ToString(), LogLevel.Error, code);
         }
         #endregion
 
@@ -247,7 +248,7 @@ namespace QCommonLib
             }
             catch (Exception e)
             {
-                UnityEngine.Debug.Log("QLogger failed to log!\n" + e.ToStringNoTrace());
+                UnityEngine.Debug.Log("QLogger failed to log!\n" + e.ToString());
             }
         }
     }
@@ -430,9 +431,9 @@ namespace QCommonLib
 
         public void FlushBundles()
         {
-            foreach ((string key, (string prevMsg, int count)) in _BundledMsgs)
+            foreach (KeyValuePair<string, (string, int)> keyValuePair in _BundledMsgs)
             {
-                OutputBundleFooter(key, prevMsg, count);
+                OutputBundleFooter(keyValuePair.Key, keyValuePair.Value.Item1, keyValuePair.Value.Item2);
             }
             _BundledMsgs.Clear();
         }
